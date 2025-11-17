@@ -40,7 +40,7 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
     viewMode === 'employee' ? user?.id : undefined,
     refreshFlag
   );
-  const { getTodayUpdate } = useTaskDailyUpdates();
+  const { getTodayUpdate, updates } = useTaskDailyUpdates();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -112,6 +112,26 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
       completed: filteredTasks.filter(t => t.status === 'completed'),
     };
   }, [filteredTasks]);
+
+  // Map taskId to latest daily update info
+  const dailyUpdateMap = useMemo(() => {
+    const map: Record<string, { lastUpdateDate: string; hasTodayUpdate: boolean }> = {};
+    const today = new Date().toISOString().split('T')[0];
+
+    updates.forEach(update => {
+      const existing = map[update.taskId];
+      const isNewer = !existing || new Date(update.updateDate) > new Date(existing.lastUpdateDate);
+      const hasToday = update.updateDate === today || existing?.hasTodayUpdate;
+
+      if (!existing || isNewer) {
+        map[update.taskId] = { lastUpdateDate: update.updateDate, hasTodayUpdate: hasToday };
+      } else if (hasToday && !existing.hasTodayUpdate) {
+        map[update.taskId] = { ...existing, hasTodayUpdate: true };
+      }
+    });
+
+    return map;
+  }, [updates]);
 
   const handleCreateTask = async () => {
     if (!newTask.title || !newTask.assignedTo || !newTask.dueDate) {
@@ -447,99 +467,94 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredTasks.map(task => (
-                <div
-                  key={task.id}
-                  className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
-                    isOverdue(task) ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-gray-900">{task.title}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
-                          {task.priority.toUpperCase()}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                          {task.status.replace('_', ' ').toUpperCase()}
-                        </span>
-                        {isOverdue(task) && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                            OVERDUE
+              {filteredTasks.map(task => {
+                const updateInfo = dailyUpdateMap[task.id];
+                return (
+                  <div
+                    key={task.id}
+                    className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                      isOverdue(task) ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-semibold text-gray-900">{task.title}</h4>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                            {task.priority.toUpperCase()}
                           </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm mb-3">{task.description}</p>
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          <span><strong>Assigned to:</strong> {task.assignedToName}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            {task.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                          {isOverdue(task) && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                              OVERDUE
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4 text-blue-500" />
-                          <span><strong>Assigned by:</strong> {task.assignedByName || 'Unknown'}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4 text-green-500" />
-                          <span><strong>Assigned:</strong> {new Date(task.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span><strong>Due:</strong> {new Date(task.dueDate).toLocaleDateString()}</span>
-                          {task.dueTime && <span className="ml-1">{task.dueTime}</span>}
-                        </div>
-                        {task.tags && task.tags.length > 0 && (
+                        
+                        <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                        
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
-                            <Tag className="h-4 w-4" />
-                            <span>{task.tags.join(', ')}</span>
+                            <User className="h-4 w-4" />
+                            <span><strong>Assigned to:</strong> {task.assignedToName}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <User className="h-4 w-4 text-blue-500" />
+                            <span><strong>Assigned by:</strong> {task.assignedByName || 'Unknown'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4 text-green-500" />
+                            <span><strong>Assigned:</strong> {new Date(task.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span><strong>Due:</strong> {new Date(task.dueDate).toLocaleDateString()}</span>
+                            {task.dueTime && <span className="ml-1">{task.dueTime}</span>}
+                          </div>
+                          {task.tags && task.tags.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Tag className="h-4 w-4" />
+                              <span>{task.tags.join(', ')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {updateInfo && (
+                          <div className="mt-2 flex items-center justify-end gap-1 text-xs text-blue-600">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                            <span>
+                              <strong>{updateInfo.hasTodayUpdate ? 'Updated today' : 'Last update:'}</strong>
+                              {!updateInfo.hasTodayUpdate && ` ${new Date(updateInfo.lastUpdateDate).toLocaleDateString()}`}
+                            </span>
+                          </div>
+                        )}
+
+                        {expandedTask === task.id && task.notes && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-700"><strong>Notes:</strong> {task.notes}</p>
                           </div>
                         )}
                       </div>
 
-                      {expandedTask === task.id && task.notes && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm text-gray-700"><strong>Notes:</strong> {task.notes}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 ml-4">
-                      {/* Admins/TL can always change status, employees cannot change completed tasks */}
-                      {(viewMode === 'admin' || task.status !== 'completed') && (
-                        <select
-                          value={task.status}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
-                          className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                      )}
-                      
-                      {/* Daily Update Actions */}
-                      {viewMode === 'admin' ? (
-                        // Admin: Only view daily updates (eye button)
-                        <button
-                          onClick={() => handleViewDailyUpdates(task)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                          title="View daily updates"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      ) : task.assignedTo === user?.id ? (
-                        // Employee: Can add daily updates (green button) and view them (eye button)
-                        <>
-                          <button
-                            onClick={() => handleDailyUpdate(task)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
-                            title="Add daily update"
+                      <div className="flex items-center gap-2 ml-4">
+                        {/* Admins/TL can always change status, employees cannot change completed tasks */}
+                        {(viewMode === 'admin' || task.status !== 'completed') && (
+                          <select
+                            value={task.status}
+                            onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
+                            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <MessageSquare className="h-4 w-4" />
-                          </button>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                          </select>
+                        )}
+                        
+                        {/* Daily Update Actions */}
+                        {viewMode === 'admin' ? (
+                          // Admin: Only view daily updates (eye button)
                           <button
                             onClick={() => handleViewDailyUpdates(task)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
@@ -547,38 +562,56 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                        </>
-                      ) : null}
-                      
-                      {viewMode === 'admin' && (
-                        <>
-                          <button
-                            onClick={() => handleEditTask(task)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                            title="Edit task"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTask(task.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                            title="Delete task"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
-                      
-                      <button
-                        onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-                      >
-                        {expandedTask === task.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </button>
+                        ) : task.assignedTo === user?.id ? (
+                          // Employee: Can add daily updates (green button) and view them (eye button)
+                          <>
+                            <button
+                              onClick={() => handleDailyUpdate(task)}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                              title="Add daily update"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleViewDailyUpdates(task)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                              title="View daily updates"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : null}
+                        
+                        {viewMode === 'admin' && (
+                          <>
+                            <button
+                              onClick={() => handleEditTask(task)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                              title="Edit task"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTask(task.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                              title="Delete task"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                        
+                        <button
+                          onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
+                          className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                        >
+                          {expandedTask === task.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
