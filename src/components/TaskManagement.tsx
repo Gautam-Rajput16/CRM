@@ -286,10 +286,28 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
     }
   };
 
+  // A task is overdue only after both its due date and due time (if any) have passed
   const isOverdue = (task: Task) => {
     if (task.status === 'completed') return false;
-    const dueDate = new Date(task.dueDate);
-    return dueDate < new Date();
+    if (!task.dueDate) return false;
+
+    // Start from the stored dueDate string so we support 'YYYY-MM-DD', ISO strings, etc.
+    const dueDateTime = new Date(task.dueDate);
+    if (Number.isNaN(dueDateTime.getTime())) return false;
+
+    if (task.dueTime) {
+      // dueTime can be 'HH:MM' or 'HH:MM:SS'
+      const [hStr, mStr, sStr] = task.dueTime.split(':');
+      const hours = Number(hStr ?? 0);
+      const minutes = Number(mStr ?? 0);
+      const seconds = Number(sStr ?? 0);
+      dueDateTime.setHours(hours, minutes, seconds, 999);
+    } else {
+      // No time set: treat as due at end of day local time
+      dueDateTime.setHours(23, 59, 59, 999);
+    }
+
+    return new Date() > dueDateTime;
   };
 
   // Calculate overdue tasks
