@@ -6,6 +6,7 @@ import { NotificationBell } from './NotificationBell';
 import { MeetingNotificationBell } from './MeetingNotificationBell';
 import { TaskManagement } from './TaskManagement';
 import { TaskNotificationBell } from './TaskNotificationBell';
+import { PerformanceCalendarModal } from './PerformanceCalendarModal';
 import { useLeads } from '../hooks/useLeads';
 import { useNotifications } from '../hooks/useNotifications';
 import { User as UserType } from '../types/User';
@@ -17,6 +18,7 @@ interface CRMDashboardProps {
 
 export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'leads' | 'tasks'>('leads');
+  const [showPerformanceCalendar, setShowPerformanceCalendar] = useState(false);
   const {
     leads,
     searchQuery,
@@ -79,7 +81,15 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
               <h1 className="text-2xl font-bold text-gray-900">Mini CRM</h1>
               <p className="text-gray-600">Manage your leads efficiently</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPerformanceCalendar(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                title="Open performance calendar"
+              >
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span className="hidden md:inline">Performance Calendar</span>
+              </button>
               <div className="flex items-center gap-2 text-gray-700">
                 <User className="h-5 w-5" />
                 <span className="font-medium">{user.name}</span>
@@ -98,6 +108,13 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {showPerformanceCalendar && (
+          <PerformanceCalendarModal
+            isOpen={showPerformanceCalendar}
+            onClose={() => setShowPerformanceCalendar(false)}
+            userId={user.id}
+          />
+        )}
         {/* Notification Permission Banner */}
         {isSupported && permission !== 'granted' && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">

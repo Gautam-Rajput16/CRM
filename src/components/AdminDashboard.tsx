@@ -28,6 +28,7 @@ import { TaskStatusNotificationBell } from './TaskStatusNotificationBell';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { ActivityAnalyticsDashboard } from './analytics/ActivityAnalyticsDashboard';
 import { EmployeeAnalyticsDashboard } from './analytics/EmployeeAnalyticsDashboard';
+import { PerformanceCalendarDashboard } from './analytics/PerformanceCalendarDashboard';
 import { LeadsTable } from './LeadsTable';
 import { LeadForm } from './LeadForm';
 import { SearchAndFilter } from './SearchAndFilter';
@@ -318,6 +319,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       id: 'employee-analytics',
       label: 'Employee Analytics',
       icon: <UserCheck className="h-5 w-5" />
+    }] : []),
+    // Performance Calendar - only for admins and team leaders
+    ...(canManageUsers ? [{
+      id: 'performance-calendar',
+      label: 'Performance Calendar',
+      icon: <Calendar className="h-5 w-5" />
     }] : []),
     // Employees - only for admins and team leaders
     ...(canManageUsers ? [{
@@ -959,7 +966,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       case 'activity-analytics':
         return <ActivityAnalyticsDashboard />;
-
+        
       case 'employee-analytics':
         return (
           <EmployeeAnalyticsDashboard 
@@ -968,6 +975,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             isLoading={isLoading}
           />
         );
+        
+      case 'performance-calendar':
+        return <PerformanceCalendarDashboard />;
         
       case 'meetings':
         return (

@@ -40,6 +40,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const monthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
   // Filter overdue follow-ups for the modal
   const getOverdueLeads = () => {
     const today = new Date().toISOString().split('T')[0];
