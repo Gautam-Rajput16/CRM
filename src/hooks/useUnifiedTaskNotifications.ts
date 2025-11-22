@@ -185,13 +185,16 @@ export const useUnifiedTaskNotifications = (userId?: string, isAdmin: boolean = 
         isInitializedRef.current = true;
       }
 
-      // Get read notifications from localStorage
+      // Get read and dismissed notifications from localStorage
       const readNotifications = JSON.parse(localStorage.getItem('readTaskNotifications') || '[]');
+      const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedTaskNotifications') || '[]');
       
-      const notificationsWithReadStatus = newNotifications.map(notif => ({
-        ...notif,
-        isRead: readNotifications.includes(notif.id),
-      }));
+      const notificationsWithReadStatus = newNotifications
+        .filter(notif => !dismissedNotifications.includes(notif.id))
+        .map(notif => ({
+          ...notif,
+          isRead: readNotifications.includes(notif.id),
+        }));
 
       // Show toast for new unread notifications (assignments for employees)
       if (!isAdmin) {
@@ -235,6 +238,22 @@ export const useUnifiedTaskNotifications = (userId?: string, isAdmin: boolean = 
     setUnreadCount(0);
   }, [notifications]);
 
+  const dismissNotification = useCallback((notificationId: string) => {
+    // Persist dismissed notification IDs so they don't reappear on next fetch
+    const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedTaskNotifications') || '[]');
+    if (!dismissedNotifications.includes(notificationId)) {
+      dismissedNotifications.push(notificationId);
+      localStorage.setItem('dismissedTaskNotifications', JSON.stringify(dismissedNotifications));
+    }
+
+    const wasUnread = notifications.some(n => n.id === notificationId && !n.isRead);
+
+    setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+    if (wasUnread) {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+  }, [notifications]);
+
   // Initial fetch and polling
   useEffect(() => {
     if (userId) {
@@ -253,5 +272,6 @@ export const useUnifiedTaskNotifications = (userId?: string, isAdmin: boolean = 
     markAsRead,
     markAllAsRead,
     refreshNotifications: fetchNotifications,
+    dismissNotification,
   };
 };

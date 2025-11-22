@@ -325,18 +325,18 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
             <p className="text-gray-600">
               {viewMode === 'admin' ? 'Manage and assign tasks to your team' : 'View and update your assigned tasks'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 md:justify-end">
             {viewMode === 'admin' && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm"
               >
                 <Plus className="h-5 w-5" />
                 Create Task
@@ -494,9 +494,9 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
                       isOverdue(task) ? 'border-red-300 bg-red-50' : 'border-gray-200'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <h4 className="font-semibold text-gray-900">{task.title}</h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
                             {task.priority.toUpperCase()}
@@ -511,7 +511,7 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
                           )}
                         </div>
                         
-                        <p className="text-gray-600 text-sm mb-3">{task.description}</p>
+                        <p className="text-gray-600 text-sm mb-3 break-words">{task.description}</p>
                         
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
@@ -556,7 +556,7 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ viewMode = 'admi
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex flex-wrap items-center gap-2 md:ml-4 md:justify-end mt-1 md:mt-0">
                         {/* Admins/TL can always change status, employees cannot change completed tasks */}
                         {(viewMode === 'admin' || task.status !== 'completed') && (
                           <select

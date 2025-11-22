@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, CheckCheck, X } from 'lucide-react';
+import { Bell, CheckCheck, X, Trash2 } from 'lucide-react';
 import { useUnifiedTaskNotifications } from '../hooks/useUnifiedTaskNotifications';
 import { useAuth } from '../hooks/useAuth';
 import { useProfiles } from '../hooks/useProfiles';
@@ -10,7 +10,7 @@ export const TaskNotificationBell: React.FC = () => {
   const currentUserProfile = profiles.find(p => p.id === user?.id);
   const isAdmin = currentUserProfile?.role === 'admin' || currentUserProfile?.role === 'team_leader';
   
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useUnifiedTaskNotifications(user?.id, isAdmin);
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissNotification } = useUnifiedTaskNotifications(user?.id, isAdmin);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const getPriorityColor = (priority: string) => {
@@ -131,13 +131,27 @@ export const TaskNotificationBell: React.FC = () => {
                           )}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900 text-sm md:text-sm line-clamp-2">
-                              {notification.taskTitle}
-                            </h4>
-                            {!notification.isRead && (
-                              <span className="flex-shrink-0 w-2.5 h-2.5 md:w-2 md:h-2 bg-blue-600 rounded-full"></span>
-                            )}
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-gray-900 text-sm md:text-sm line-clamp-2">
+                                {notification.taskTitle}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {!notification.isRead && (
+                                <span className="w-2.5 h-2.5 md:w-2 md:h-2 bg-blue-600 rounded-full"></span>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dismissNotification(notification.id);
+                                }}
+                                className="p-1 rounded hover:bg-gray-200 transition-colors"
+                                title="Remove notification"
+                              >
+                                <Trash2 className="h-3 w-3 text-gray-500" />
+                              </button>
+                            </div>
                           </div>
                           
                           {notification.notificationType === 'assignment' ? (

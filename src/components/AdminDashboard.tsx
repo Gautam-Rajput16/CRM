@@ -1227,7 +1227,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div 
@@ -1240,8 +1240,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       <div className={`
         ${sidebarCollapsed ? 'w-16' : 'w-64'} 
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        fixed lg:relative z-50 lg:z-auto
-        bg-blue-900 shadow-lg transition-all duration-300 flex flex-col h-full
+        fixed inset-y-0 left-0 z-50
+        bg-blue-900 shadow-lg transition-all duration-300 flex flex-col
       `}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-blue-800">
@@ -1370,7 +1370,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      <div
+        className={`
+          flex-1 flex flex-col overflow-hidden
+          ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}
+        `}
+      >
         {/* Top Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
