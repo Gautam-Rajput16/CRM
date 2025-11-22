@@ -23,8 +23,8 @@ export const ActivityAnalyticsDashboard: React.FC = () => {
               Track employee calls and lead status changes for better performance insights
             </p>
           </div>
-          
-          {/* Date Selector for Daily Report */}
+
+          {/* Date Selector for Daily Summary only */}
           {activeView === 'daily' && (
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-gray-400" />
@@ -66,11 +66,10 @@ export const ActivityAnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Content */}
-      {activeView === 'daily' ? (
+      {activeView === 'daily' && (
         <DailyActivityReport selectedDate={selectedDate} />
-      ) : (
-        <ActivityLogsViewer />
       )}
+      {activeView === 'logs' && <ActivityLogsViewer />}
     </div>
   );
 };

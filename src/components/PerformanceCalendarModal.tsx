@@ -12,8 +12,10 @@ interface PerformanceCalendarModalProps {
 }
 
 interface DayPerformance {
-  meetings: number;
-  salesAmount: number;
+  meetingsScheduled: number;
+  meetingsDone: number;
+  quotationsSent: number;
+  confirmations: number;
 }
 
 type PerformanceMap = Record<string, DayPerformance>;
@@ -55,16 +57,20 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
 }) => {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [meetingsInput, setMeetingsInput] = useState('');
-  const [salesInput, setSalesInput] = useState('');
+  const [scheduledInput, setScheduledInput] = useState('');
+  const [doneInput, setDoneInput] = useState('');
+  const [quotationInput, setQuotationInput] = useState('');
+  const [confirmInput, setConfirmInput] = useState('');
   const { entries, isLoading, saveEntry, deleteEntry } = useDailyPerformance(userId);
 
   const performance: PerformanceMap = useMemo(() => {
     const map: PerformanceMap = {};
     entries.forEach(entry => {
       map[entry.date] = {
-        meetings: entry.meetings,
-        salesAmount: entry.salesAmount,
+        meetingsScheduled: entry.meetingsScheduled,
+        meetingsDone: entry.meetingsDone,
+        quotationsSent: entry.quotationsSent,
+        confirmations: entry.confirmations,
       };
     });
     return map;
@@ -77,8 +83,10 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
       setSelectedDate(today);
       const key = getDateKey(today);
       const dayData = performance[key];
-      setMeetingsInput(dayData ? String(dayData.meetings) : '');
-      setSalesInput(dayData ? String(dayData.salesAmount) : '');
+      setScheduledInput(dayData ? String(dayData.meetingsScheduled) : '');
+      setDoneInput(dayData ? String(dayData.meetingsDone) : '');
+      setQuotationInput(dayData ? String(dayData.quotationsSent) : '');
+      setConfirmInput(dayData ? String(dayData.confirmations) : '');
     }
   }, [isOpen, performance, selectedDate]);
 
@@ -89,24 +97,32 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
     setSelectedDate(date);
     const key = getDateKey(date);
     const dayData = performance[key];
-    setMeetingsInput(dayData ? String(dayData.meetings) : '');
-    setSalesInput(dayData ? String(dayData.salesAmount) : '');
+    setScheduledInput(dayData ? String(dayData.meetingsScheduled) : '');
+    setDoneInput(dayData ? String(dayData.meetingsDone) : '');
+    setQuotationInput(dayData ? String(dayData.quotationsSent) : '');
+    setConfirmInput(dayData ? String(dayData.confirmations) : '');
   };
 
   const handleSave = () => {
     if (!selectedDate || !userId) return;
-    const meetings = Number.isNaN(Number(meetingsInput)) || meetingsInput === '' ? 0 : Number(meetingsInput);
-    const salesAmount = Number.isNaN(Number(salesInput)) || salesInput === '' ? 0 : Number(salesInput);
+    const meetingsScheduled =
+      Number.isNaN(Number(scheduledInput)) || scheduledInput === '' ? 0 : Number(scheduledInput);
+    const meetingsDone = Number.isNaN(Number(doneInput)) || doneInput === '' ? 0 : Number(doneInput);
+    const quotationsSent =
+      Number.isNaN(Number(quotationInput)) || quotationInput === '' ? 0 : Number(quotationInput);
+    const confirmations = Number.isNaN(Number(confirmInput)) || confirmInput === '' ? 0 : Number(confirmInput);
     const dateKey = getDateKey(selectedDate);
-    saveEntry(dateKey, meetings, salesAmount, userId);
+    saveEntry(dateKey, meetingsScheduled, meetingsDone, quotationsSent, confirmations, userId);
   };
 
   const handleClear = () => {
     if (!selectedDate || !userId) return;
     const dateKey = getDateKey(selectedDate);
     deleteEntry(dateKey, userId);
-    setMeetingsInput('');
-    setSalesInput('');
+    setScheduledInput('');
+    setDoneInput('');
+    setQuotationInput('');
+    setConfirmInput('');
   };
 
   const handlePrevMonth = () => {
@@ -146,27 +162,31 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
   const selectedPerformance = selectedKey ? performance[selectedKey] : undefined;
 
   const monthTotals = useMemo(() => {
-    let meetingsTotal = 0;
-    let salesTotal = 0;
+    let meetingsScheduledTotal = 0;
+    let meetingsDoneTotal = 0;
+    let quotationsTotal = 0;
+    let confirmationsTotal = 0;
     const monthYearKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
     Object.entries(performance).forEach(([dateKey, value]) => {
       const d = new Date(dateKey);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (key === monthYearKey) {
-        meetingsTotal += value.meetings;
-        salesTotal += value.salesAmount;
+        meetingsScheduledTotal += value.meetingsScheduled;
+        meetingsDoneTotal += value.meetingsDone;
+        quotationsTotal += value.quotationsSent;
+        confirmationsTotal += value.confirmations;
       }
     });
-    return { meetingsTotal, salesTotal };
+    return { meetingsScheduledTotal, meetingsDoneTotal, quotationsTotal, confirmationsTotal };
   }, [currentMonth, performance]);
 
   const headerTitle = title || 'Daily Performance Calendar';
   const headerSubtitle =
-    subtitle || 'Track meetings fixed and sales from your calls';
+    subtitle || 'Track your daily meetings and sales pipeline stages';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -185,7 +205,7 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-5 flex-1">
           <div className="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col">
             <div className="flex items-center justify-between px-6 py-4">
               <button
@@ -243,15 +263,15 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-semibold text-gray-900">{date.getDate()}</span>
-                        {value && value.meetings > 0 && (
+                        {value && (value.meetingsScheduled > 0 || value.meetingsDone > 0) && (
                           <span className="inline-flex items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                            {value.meetings} m
+                            {value.meetingsDone} done
                           </span>
                         )}
                       </div>
-                      {value && value.salesAmount > 0 && (
+                      {value && (value.quotationsSent > 0 || value.confirmations > 0) && (
                         <div className="text-[10px] text-emerald-700 font-medium truncate">
-                          ₹{value.salesAmount.toLocaleString('en-IN')}
+                          Q:{value.quotationsSent} · C:{value.confirmations}
                         </div>
                       )}
                     </button>
@@ -270,7 +290,10 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
                 <div>
                   <p className="text-xs uppercase tracking-wide text-gray-500">This Month</p>
                   <p className="text-sm font-semibold text-gray-900">
-                    {monthTotals.meetingsTotal} meetings · ₹{monthTotals.salesTotal.toLocaleString('en-IN')}
+                    Scheduled: {monthTotals.meetingsScheduledTotal} · Done: {monthTotals.meetingsDoneTotal}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Quotation sent: {monthTotals.quotationsTotal} · Confirm: {monthTotals.confirmationsTotal}
                   </p>
                 </div>
               </div>
@@ -292,76 +315,115 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
 
               <div className="space-y-3">
                 {canEdit ? (
-                  <>
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Meetings fixed today
+                        Meetings scheduled
                       </label>
                       <input
                         type="number"
                         min={0}
-                        value={meetingsInput}
-                        onChange={e => setMeetingsInput(e.target.value)}
-                        placeholder="Enter number of meetings"
+                        value={scheduledInput}
+                        onChange={e => setScheduledInput(e.target.value)}
+                        placeholder="Enter number of meetings scheduled"
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none bg-white"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Sales amount from calls (₹)
+                        Meetings done
                       </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">
-                          ₹
-                        </span>
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={salesInput}
-                          onChange={e => setSalesInput(e.target.value)}
-                          placeholder="0.00"
-                          className="w-full rounded-lg border border-gray-300 pl-8 pr-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none bg-white"
-                        />
-                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        value={doneInput}
+                        onChange={e => setDoneInput(e.target.value)}
+                        placeholder="Enter number of meetings done"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none bg-white"
+                      />
                     </div>
 
-                    {selectedPerformance && (selectedPerformance.meetings > 0 || selectedPerformance.salesAmount > 0) && (
-                      <div className="rounded-lg bg-white border border-gray-200 px-3 py-2 text-xs text-gray-700 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span>Saved meetings</span>
-                          <span className="font-semibold">{selectedPerformance.meetings}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Saved sales</span>
-                          <span className="font-semibold">₹{selectedPerformance.salesAmount.toLocaleString('en-IN')}</span>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-2 text-sm text-gray-800">
-                      <div className="flex items-center justify-between">
-                        <span>Meetings fixed</span>
-                        <span className="font-semibold">
-                          {selectedPerformance ? selectedPerformance.meetings : 0}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Sales amount (₹)</span>
-                        <span className="font-semibold">
-                          ₹{selectedPerformance ? selectedPerformance.salesAmount.toLocaleString('en-IN') : 0}
-                        </span>
-                      </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Quotation sent
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={quotationInput}
+                        onChange={e => setQuotationInput(e.target.value)}
+                        placeholder="Enter number of quotations sent"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none bg-white"
+                      />
                     </div>
-                    {!selectedPerformance && (
-                      <p className="text-xs text-gray-500">
-                        No performance data saved for this date.
-                      </p>
-                    )}
-                  </>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Confirm
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={confirmInput}
+                        onChange={e => setConfirmInput(e.target.value)}
+                        placeholder="Enter number of confirmations"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 outline-none bg-white"
+                      />
+                    </div>
+
+                    {selectedPerformance &&
+                      (selectedPerformance.meetingsScheduled > 0 ||
+                        selectedPerformance.meetingsDone > 0 ||
+                        selectedPerformance.quotationsSent > 0 ||
+                        selectedPerformance.confirmations > 0) && (
+                        <div className="rounded-lg bg-white border border-gray-200 px-3 py-2 text-xs text-gray-700 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span>Saved meetings scheduled</span>
+                            <span className="font-semibold">{selectedPerformance.meetingsScheduled}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Saved meetings done</span>
+                            <span className="font-semibold">{selectedPerformance.meetingsDone}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Saved quotations sent</span>
+                            <span className="font-semibold">{selectedPerformance.quotationsSent}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>Saved confirmations</span>
+                            <span className="font-semibold">{selectedPerformance.confirmations}</span>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-sm text-gray-800">
+                    <div className="flex items-center justify-between">
+                      <span>Meetings scheduled</span>
+                      <span className="font-semibold">
+                        {selectedPerformance ? selectedPerformance.meetingsScheduled : 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Meetings done</span>
+                      <span className="font-semibold">
+                        {selectedPerformance ? selectedPerformance.meetingsDone : 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Quotation sent</span>
+                      <span className="font-semibold">
+                        {selectedPerformance ? selectedPerformance.quotationsSent : 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Confirm</span>
+                      <span className="font-semibold">
+                        {selectedPerformance ? selectedPerformance.confirmations : 0}
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -369,7 +431,7 @@ export const PerformanceCalendarModal: React.FC<PerformanceCalendarModalProps> =
             <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between gap-3 bg-gray-50">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-                <span>Blue badge shows meetings; amount shows sales for that day.</span>
+                <span>Blue badge shows meetings done; text shows quotation and confirm counts for that day.</span>
               </div>
               {canEdit && (
                 <div className="flex items-center justify-end gap-2">

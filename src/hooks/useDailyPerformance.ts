@@ -7,8 +7,10 @@ const mapDbToPerformance = (row: DailyPerformanceDB): DailyPerformance => ({
   id: row.id,
   userId: row.user_id,
   date: row.date,
-  meetings: row.meetings,
-  salesAmount: row.sales_amount,
+  meetingsScheduled: row.meetings_scheduled,
+  meetingsDone: row.meetings_done,
+  quotationsSent: row.quotations_sent,
+  confirmations: row.confirmations,
   createdAt: new Date(row.created_at),
   updatedAt: new Date(row.updated_at),
 });
@@ -46,7 +48,14 @@ export const useDailyPerformance = (userId?: string) => {
     fetchEntries();
   }, [fetchEntries]);
 
-  const saveEntry = async (date: string, meetings: number, salesAmount: number, overrideUserId?: string) => {
+  const saveEntry = async (
+    date: string,
+    meetingsScheduled: number,
+    meetingsDone: number,
+    quotationsSent: number,
+    confirmations: number,
+    overrideUserId?: string
+  ) => {
     try {
       const targetUserId = overrideUserId || userId;
       if (!targetUserId) {
@@ -56,8 +65,10 @@ export const useDailyPerformance = (userId?: string) => {
       const payload = {
         user_id: targetUserId,
         date,
-        meetings,
-        sales_amount: salesAmount,
+        meetings_scheduled: meetingsScheduled,
+        meetings_done: meetingsDone,
+        quotations_sent: quotationsSent,
+        confirmations,
       };
 
       const { error } = await supabase
