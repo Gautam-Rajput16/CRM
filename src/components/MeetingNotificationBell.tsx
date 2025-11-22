@@ -68,7 +68,7 @@ export const MeetingNotificationBell: React.FC<MeetingNotificationBellProps> = (
       {/* Calendar Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative flex flex-col items-center p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         title={`${todaysMeetings.length} meetings today`}
       >
         <Calendar className="h-6 w-6" />
@@ -78,6 +78,9 @@ export const MeetingNotificationBell: React.FC<MeetingNotificationBellProps> = (
             {todaysMeetings.length > 9 ? '9+' : todaysMeetings.length}
           </span>
         )}
+        <span className="mt-0.5 text-[10px] font-medium text-gray-700 md:hidden">
+          Meetings
+        </span>
       </button>
 
       {/* Dropdown */}

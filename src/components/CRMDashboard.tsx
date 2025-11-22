@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LogOut, User, Bell, Calendar, Users as UsersIcon, ListTodo } from 'lucide-react';
+import { LogOut, User, Bell, Calendar, Users as UsersIcon, ListTodo, AlertTriangle } from 'lucide-react';
 import { SearchAndFilter } from './SearchAndFilter';
 import { LeadsTable } from './LeadsTable';
 import { NotificationBell } from './NotificationBell';
@@ -10,6 +10,7 @@ import { PerformanceCalendarModal } from './PerformanceCalendarModal';
 import { useLeads } from '../hooks/useLeads';
 import { useNotifications } from '../hooks/useNotifications';
 import { User as UserType } from '../types/User';
+import { OverdueLeadsModal } from './analytics/OverdueLeadsModal';
 
 interface CRMDashboardProps {
   user: UserType;
@@ -19,6 +20,7 @@ interface CRMDashboardProps {
 export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'leads' | 'tasks'>('leads');
   const [showPerformanceCalendar, setShowPerformanceCalendar] = useState(false);
+  const [showOverdueModal, setShowOverdueModal] = useState(false);
   const {
     leads,
     searchQuery,
@@ -42,6 +44,23 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
       lead.phone.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || lead.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  const todayDateStr = new Date().toISOString().split('T')[0];
+
+  const overdueLeads = myLeads.filter(lead => {
+    if (lead.status !== 'Follow-up' && lead.status !== 'Special Follow-up') {
+      return false;
+    }
+
+    let leadDate = lead.followUpDate;
+    if (!leadDate) return false;
+    leadDate = String(leadDate);
+    if (leadDate.includes('T')) {
+      leadDate = leadDate.split('T')[0];
+    }
+
+    return leadDate < todayDateStr;
   });
 
   const {
@@ -115,6 +134,11 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
             userId={user.id}
           />
         )}
+        <OverdueLeadsModal
+          isOpen={showOverdueModal}
+          onClose={() => setShowOverdueModal(false)}
+          overdueLeads={overdueLeads}
+        />
         {/* Notification Permission Banner */}
         {isSupported && permission !== 'granted' && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -265,8 +289,8 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
 
         {/* Tabs Navigation */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setActiveTab('leads')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -290,7 +314,20 @@ export const CRMDashboard: React.FC<CRMDashboardProps> = ({ user, onLogout }) =>
                 My Tasks
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 md:justify-end">
+              <button
+                onClick={() => setShowOverdueModal(true)}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-red-200 text-xs sm:text-sm text-red-700 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={overdueLeads.length === 0}
+              >
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <span className="text-xs font-medium">Overdue Follow-ups</span>
+                {overdueLeads.length > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] w-5 h-5">
+                    {overdueLeads.length}
+                  </span>
+                )}
+              </button>
               <TaskNotificationBell />
               <NotificationBell leads={leads} currentUserId={user.id} />
               <MeetingNotificationBell leads={leads} currentUserId={user.id} />

@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, Phone, User } from 'lucide-react';
-import { TodoIcon } from './TodoIcon';
-import { TodoModule } from './TodoModule';
 import { Lead } from '../types/Lead';
 
 interface NotificationBellProps {
@@ -11,7 +9,6 @@ interface NotificationBellProps {
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({ leads, currentUserId }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isTodoOpen, setIsTodoOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get today's follow-ups - using current date dynamically
@@ -59,7 +56,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ leads, curre
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative flex flex-col items-center p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         title={`${todaysFollowUps.length} follow-ups today`}
       >
         <Bell className="h-6 w-6" />
@@ -69,14 +66,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ leads, curre
             {todaysFollowUps.length > 9 ? '9+' : todaysFollowUps.length}
           </span>
         )}
-      </button>
-      {/* Todo Icon Button */}
-      <button
-        onClick={() => setIsTodoOpen(!isTodoOpen)}
-        className="relative p-2 ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        title="My Tasks"
-      >
-        <TodoIcon className="h-6 w-6" />
+        <span className="mt-0.5 text-[10px] font-medium text-gray-700 md:hidden">
+          Follow-ups
+        </span>
       </button>
 
       {/* Dropdown */}
@@ -160,12 +152,6 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ leads, curre
               </p>
             </div>
           )}
-        </div>
-      )}
-      {/* Todo Dropdown/Modal */}
-      {isTodoOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-          <TodoModule userId={currentUserId} />
         </div>
       )}
     </div>

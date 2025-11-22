@@ -38,7 +38,7 @@ export const TaskNotificationBell: React.FC = () => {
       {/* Bell Icon */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative flex flex-col items-center p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         title="Task Notifications"
       >
         <Bell className="h-5 w-5" />
@@ -47,6 +47,9 @@ export const TaskNotificationBell: React.FC = () => {
             {unreadCount}
           </span>
         )}
+        <span className="mt-0.5 text-[10px] font-medium text-gray-700 md:hidden">
+          Tasks
+        </span>
       </button>
 
       {/* Dropdown/Modal - Responsive */}
