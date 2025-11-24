@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
+import {
+  LayoutDashboard,
+  Users,
   BarChart3,
   UserCheck,
   UserPlus,
@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   Calendar,
-  ListTodo
+  ListTodo,
+  Clock
 } from 'lucide-react';
 import { useLeads } from '../hooks/useLeads';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -29,6 +30,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { ActivityAnalyticsDashboard } from './analytics/ActivityAnalyticsDashboard';
 import { EmployeeAnalyticsDashboard } from './analytics/EmployeeAnalyticsDashboard';
 import { PerformanceCalendarDashboard } from './analytics/PerformanceCalendarDashboard';
+import { AttendanceReportDashboard } from './AttendanceReportDashboard';
 import { LeadsTable } from './LeadsTable';
 import { LeadForm } from './LeadForm';
 import { SearchAndFilter } from './SearchAndFilter';
@@ -59,7 +61,7 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // Initialize activeSection from localStorage or default to 'dashboard'
   const [activeSection, setActiveSection] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -69,17 +71,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
     return 'dashboard';
   });
-  
+
   const [showEmployeeSidebar, setShowEmployeeSidebar] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showTodayFollowUpsModal, setShowTodayFollowUpsModal] = useState(false);
   const [showTodayMeetingsModal, setShowTodayMeetingsModal] = useState(false);
-  
+
   // Refresh flags for data fetching
   const [leadsRefreshFlag, setLeadsRefreshFlag] = useState(false);
   const [profilesRefreshFlag, setProfilesRefreshFlag] = useState(false);
-  
+
   const {
     leads,
     isLoading,
@@ -98,13 +100,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   // Unified analytics for dashboard cards
   const analyticsData = useAnalytics(leads);
-  
+
   const { user } = useAuth();
   const { profiles: allProfiles } = useProfiles(true, profilesRefreshFlag);
-  
+
   // Check user roles
   const currentUserProfile = allProfiles.find(profile => profile.id === user?.id);
-  
+
   // Enable task status notifications for admins
   const isAdminOrTeamLeader = currentUserProfile?.role === 'admin' || currentUserProfile?.role === 'team_leader';
   useTaskStatusNotifications(user?.id, isAdminOrTeamLeader);
@@ -113,7 +115,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const isCurrentUserSalesExecutive = currentUserProfile?.role === 'sales_executive';
   const canManageUsers = isCurrentUserAdmin || isCurrentUserTeamLeader;
   const canViewAllLeads = isCurrentUserAdmin || isCurrentUserTeamLeader;
-  
+
   // Filter states
   const [leadFilter, setLeadFilter] = useState<'all' | 'mine' | 'others'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,7 +123,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-  
+
   // Bulk action states
   const [bulkAction, setBulkAction] = useState<string>('');
 
@@ -155,7 +157,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       const selectedProfile = allProfiles.find(p => p.id === userId);
       const { error } = await supabase
         .from('leads')
-        .update({ 
+        .update({
           meeting_assigned_user_id: userId,
           meeting_assigned_user_name: selectedProfile?.name || null
         })
@@ -209,9 +211,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       // Remove assignments where this user is assigned to leads
       const { error: updateAssignedError } = await supabase
         .from('leads')
-        .update({ 
+        .update({
           assigned_user_id: null,
-          assigned_user_name: null 
+          assigned_user_name: null
         })
         .eq('assigned_user_id', userId);
 
@@ -222,9 +224,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       // Remove meeting assignments where this user is assigned to meetings
       const { error: updateMeetingError } = await supabase
         .from('leads')
-        .update({ 
+        .update({
           meeting_assigned_user_id: null,
-          meeting_assigned_user_name: null 
+          meeting_assigned_user_name: null
         })
         .eq('meeting_assigned_user_id', userId);
 
@@ -267,7 +269,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       // Success - the trigger handled auth deletion automatically
       toast.success(`User "${userName || 'Unknown'}" deleted completely from both database and authentication`, { id: 'delete-user' });
-      
+
       // Refresh profiles list and leads data
       setProfilesRefreshFlag(flag => !flag);
       setLeadsRefreshFlag(flag => !flag);
@@ -276,7 +278,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       toast.error(error.message || 'Failed to delete user. Please try again.', { id: 'delete-user' });
     }
   };
-  
+
   // File input ref for import
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -332,6 +334,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       label: 'Employees',
       icon: <Users className="h-5 w-5" />
     }] : []),
+    // Attendance Tracking - only for admins and team leaders
+    ...(canManageUsers ? [{
+      id: 'attendance-tracking',
+      label: 'Attendance Tracking',
+      icon: <Clock className="h-5 w-5" />
+    }] : []),
     // Import/Export - only for admins and team leaders
     ...(canViewAllLeads ? [{
       id: 'import-export',
@@ -358,13 +366,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       return false;
     }
 
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       lead.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.phone.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'All' || lead.status === statusFilter;
-    
-    const matchesOwnership = leadFilter === 'all' || 
+
+    const matchesOwnership = leadFilter === 'all' ||
       (leadFilter === 'mine' ? lead.userId === user?.id : lead.userId !== user?.id);
 
     const matchesEmployee =
@@ -407,7 +415,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('adminDashboard_activeSection');
     }
-    
+
     if (onLogout) {
       await onLogout();
     }
@@ -432,25 +440,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           toast.success('Selected leads deleted successfully');
           break;
         case 'status-follow-up':
-          await Promise.all(selectedLeads.map(id => 
+          await Promise.all(selectedLeads.map(id =>
             updateLeadStatus(id, 'Follow-up')
           ));
           toast.success('Status updated to Follow-up');
           break;
         case 'status-special-follow-up':
-          await Promise.all(selectedLeads.map(id => 
+          await Promise.all(selectedLeads.map(id =>
             updateLeadStatus(id, 'Special Follow-up')
           ));
           toast.success('Status updated to Special Follow-up');
           break;
         case 'status-confirmed':
-          await Promise.all(selectedLeads.map(id => 
+          await Promise.all(selectedLeads.map(id =>
             updateLeadStatus(id, 'Confirmed')
           ));
           toast.success('Status updated to Confirmed');
           break;
         case 'status-not-connected':
-          await Promise.all(selectedLeads.map(id => 
+          await Promise.all(selectedLeads.map(id =>
             updateLeadStatus(id, 'Not Connected')
           ));
           toast.success('Status updated to Not Connected');
@@ -515,9 +523,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(sampleData);
-    
+
     // Add some styling to the worksheet
-    
+
     // Set column widths
     worksheet['!cols'] = [
       { width: 15 }, // Lead Name
@@ -532,7 +540,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sample Leads');
     XLSX.writeFile(workbook, 'Sample_Leads_Template.xlsx');
-    
+
     toast.success('Sample template downloaded successfully!');
   };
 
@@ -650,7 +658,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             // Clean phone number and validate
             const cleanPhone = lead.phone.replace(/[\s\-\(\)\+]/g, '');
-            
+
             // Validate phone number: must be exactly 10 digits
             if (!/^\d{10}$/.test(cleanPhone)) {
               console.warn(`Row ${index + 1}: Invalid phone number. Must be exactly 10 digits. Found: "${lead.phone}" (cleaned: "${cleanPhone}")`);
@@ -686,7 +694,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           setImportQueue(queue);
           setCurrentImportIndex(0);
           toast.success(`Starting import of ${validLeadsCount} leads...`);
-          
+
           // Begin processing
           setTimeout(processNextImport, 500);
 
@@ -739,9 +747,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <UserCheck className="h-8 w-8 text-green-600" />
                 </div>
               </div>
-             
+
               {/* Today's Follow-ups */}
-              <div 
+              <div
                 className="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-100 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition-colors group"
                 onClick={() => setShowTodayFollowUpsModal(true)}
               >
@@ -750,7 +758,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <div className="text-xs text-blue-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to view details</div>
               </div>
               {/* Today's Meetings */}
-              <div 
+              <div
                 className="bg-green-50 p-6 rounded-lg shadow-sm border border-green-100 flex flex-col items-center justify-center cursor-pointer hover:bg-green-100 transition-colors group"
                 onClick={() => setShowTodayMeetingsModal(true)}
               >
@@ -759,7 +767,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <div className="text-xs text-green-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to view details</div>
               </div>
             </div>
-            
+
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -776,7 +784,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-sm text-gray-600">View and edit all leads</p>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     setActiveSection('analytics');
@@ -790,7 +798,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <p className="text-sm text-gray-600">Performance insights</p>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     setActiveSection('activity-analytics');
@@ -808,7 +816,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'leads':
         return (
           <div className="space-y-6">
@@ -830,7 +838,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   >Other Users' Leads</button> */}
                 </div>
               </div>
-              
+
               <SearchAndFilter
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -855,7 +863,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               }
             }} />
 
-            <AssignmentPanel 
+            <AssignmentPanel
               selectedLeads={selectedLeads}
               onClearSelection={() => setSelectedLeads([])}
               onRefresh={refreshData}
@@ -890,11 +898,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <button
                     onClick={handleBulkAction}
                     disabled={!bulkAction || selectedLeads.length === 0}
-                    className={`px-3 py-1 rounded text-sm ${
-                      !bulkAction || selectedLeads.length === 0
-                        ? 'bg-gray-200 text-gray-500'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
+                    className={`px-3 py-1 rounded text-sm ${!bulkAction || selectedLeads.length === 0
+                      ? 'bg-gray-200 text-gray-500'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
                   >
                     Apply
                   </button>
@@ -915,7 +922,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
               <div className="max-h-[500px] overflow-y-auto">
-                <LeadsTable 
+                <LeadsTable
                   leads={filteredLeads}
                   onUpdateStatus={(id, status) => updateLeadStatus(id, status)}
                   onUpdateNotes={(id, notes) => updateLeadNotes(id, notes)}
@@ -952,11 +959,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'analytics':
         return (
-          <AnalyticsDashboard 
-            leads={leads} 
+          <AnalyticsDashboard
+            leads={leads}
             isLoading={isLoading}
             currentUserId={user?.id}
             userRole={currentUserProfile?.role}
@@ -966,27 +973,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       case 'activity-analytics':
         return <ActivityAnalyticsDashboard />;
-        
+
       case 'employee-analytics':
         return (
-          <EmployeeAnalyticsDashboard 
+          <EmployeeAnalyticsDashboard
             leads={leads}
             profiles={allProfiles}
             isLoading={isLoading}
           />
         );
-        
+
       case 'performance-calendar':
         return <PerformanceCalendarDashboard />;
-        
+
+      case 'attendance-tracking':
+        return <AttendanceReportDashboard />;
+
       case 'meetings':
         return (
-          <MeetingsView 
+          <MeetingsView
             leads={leads}
-            profiles={allProfiles.map(profile => ({ 
-              id: profile.id, 
-              name: profile.name, 
-              role: profile.role 
+            profiles={allProfiles.map(profile => ({
+              id: profile.id,
+              name: profile.name,
+              role: profile.role
             }))}
             currentUser={user}
             onUpdateNotes={updateLeadNotes}
@@ -998,10 +1008,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             canEdit={canManageUsers}
           />
         );
-        
+
       case 'tasks':
         return <TaskManagement viewMode="admin" />;
-        
+
       case 'employees':
         return (
           <div className="space-y-6">
@@ -1039,7 +1049,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <h4 className="text-lg font-medium text-gray-900">Users ({allProfiles.length})</h4>
                 </div>
               </div>
-              
+
               {allProfiles.length === 0 ? (
                 <div className="p-8 text-center">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1074,28 +1084,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                               <div className="text-sm text-gray-900">{profile.email}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                profile.role === 'admin' 
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : profile.role === 'team_leader' || profile.role === 'sales_team_leader' || profile.role === 'operations_team_leader'
+                              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${profile.role === 'admin'
+                                ? 'bg-purple-100 text-purple-800'
+                                : profile.role === 'team_leader' || profile.role === 'sales_team_leader' || profile.role === 'operations_team_leader'
                                   ? 'bg-blue-100 text-blue-800'
                                   : profile.role === 'sales_executive'
-                                  ? 'bg-green-100 text-green-800'
-                                  : profile.role === 'operations_team'
-                                  ? 'bg-teal-100 text-teal-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
+                                    ? 'bg-green-100 text-green-800'
+                                    : profile.role === 'operations_team'
+                                      ? 'bg-teal-100 text-teal-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                }`}>
                                 {profile.role === 'admin' ? (
                                   <Shield className="h-3 w-3" />
                                 ) : (
                                   <CheckCircle className="h-3 w-3" />
                                 )}
                                 {profile.role === 'sales_executive' ? 'Sales Executive' :
-                                 profile.role === 'team_leader' ? 'Team Leader' :
-                                 profile.role === 'sales_team_leader' ? 'Sales Team Leader' :
-                                 profile.role === 'operations_team' ? 'Operations Team' :
-                                 profile.role === 'operations_team_leader' ? 'Operations Team Leader' :
-                                 profile.role === 'admin' ? 'Admin' : 'User'}
+                                  profile.role === 'team_leader' ? 'Team Leader' :
+                                    profile.role === 'sales_team_leader' ? 'Sales Team Leader' :
+                                      profile.role === 'operations_team' ? 'Operations Team' :
+                                        profile.role === 'operations_team_leader' ? 'Operations Team Leader' :
+                                          profile.role === 'admin' ? 'Admin' : 'User'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1120,7 +1129,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         );
-        
+
       case 'import-export':
         return (
           <div className="space-y-6">
@@ -1185,7 +1194,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   Assign to Employee
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -1201,7 +1210,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                 </div>
-                
+
                 <div className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <Download className="h-6 w-6 text-green-600" />
@@ -1220,7 +1229,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         );
-        
+
       default:
         return <div>Select a section from the sidebar</div>;
     }
@@ -1230,12 +1239,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <div className={`
         ${sidebarCollapsed ? 'w-16' : 'w-64'} 
@@ -1272,11 +1281,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 // Refresh data when switching sections
                 refreshData();
               }}
-              className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${
-                activeSection === item.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-blue-100 hover:bg-blue-800 hover:text-white'
-              }`}
+              className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors ${activeSection === item.id
+                ? 'bg-blue-600 text-white'
+                : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                }`}
               title={sidebarCollapsed ? item.label : ''}
             >
               <div className={`${sidebarCollapsed ? 'scale-75' : ''} transition-transform duration-200`}>
@@ -1320,13 +1328,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{user?.name || 'User'}</h3>
                     <p className="text-sm text-gray-600">{user?.email}</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                      currentUserProfile?.role === 'admin' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : currentUserProfile?.role === 'team_leader'
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mt-1 ${currentUserProfile?.role === 'admin'
+                      ? 'bg-purple-100 text-purple-800'
+                      : currentUserProfile?.role === 'team_leader'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
-                    }`}>
+                      }`}>
                       {currentUserProfile?.role === 'admin' ? (
                         <Shield className="h-3 w-3" />
                       ) : (
@@ -1353,7 +1360,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           )}
         </div>
-          
+
         {/* Logout Button */}
         <div className="p-4">
           <button
@@ -1387,7 +1394,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <Menu className="h-6 w-6" />
               </button>
-              
+
               <div>
                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
                   {sidebarItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
@@ -1405,7 +1412,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </header>
 
         {/* Main Content Area */}
-        <main 
+        <main
           className="flex-1 overflow-auto p-4 lg:p-6"
           onClick={() => setShowProfileDropdown(false)}
         >
@@ -1423,14 +1430,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </div>
 
       {/* Employee Sidebar */}
-      <EmployeeSidebar 
+      <EmployeeSidebar
         isOpen={showEmployeeSidebar}
         onClose={() => setShowEmployeeSidebar(false)}
         refreshTrigger={leadsRefreshFlag}
       />
 
       {/* User Management Modal */}
-      <UserManagement 
+      <UserManagement
         isOpen={showUserManagement}
         onClose={() => {
           setShowUserManagement(false);

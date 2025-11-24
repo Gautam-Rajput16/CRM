@@ -137,7 +137,7 @@ export const getCallLogs = async (filters?: {
     // Add employee names and previous activity timestamps to call logs
     const enrichedLogs = await Promise.all(callLogs.map(async (log) => {
       const profile = profiles?.find(p => p.id === log.employee_id);
-      
+
       // Get previous call for this lead
       const { data: previousCall } = await supabase
         .from('call_logs')
@@ -231,7 +231,7 @@ export const getStatusChangeLogs = async (filters?: {
     // Add employee names and previous activity timestamps to status change logs
     const enrichedLogs = await Promise.all(statusLogs.map(async (log) => {
       const profile = profiles?.find(p => p.id === log.employee_id);
-      
+
       // Get previous call for this lead
       const { data: previousCall } = await supabase
         .from('call_logs')
@@ -373,14 +373,14 @@ export const getDailyStatusChangeSummary = async (date: string) => {
         };
       }
       acc[employeeId].status_changes++;
-      
+
       // Track status breakdown
       const status = log.new_status;
       if (!acc[employeeId].status_breakdown[status]) {
         acc[employeeId].status_breakdown[status] = 0;
       }
       acc[employeeId].status_breakdown[status]++;
-      
+
       return acc;
     }, {});
 

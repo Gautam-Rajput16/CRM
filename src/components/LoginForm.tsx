@@ -87,9 +87,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToSignup,
                 id="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter your email"
                 disabled={isLoading}
               />
@@ -110,9 +109,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToSignup,
                 id="password"
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
-                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Enter your password"
                 disabled={isLoading}
               />

@@ -11,6 +11,7 @@ import OperationsDashboard from './components/OperationsDashboard';
 import OperationsTeamLeaderDashboard from './components/OperationsTeamLeaderDashboard';
 import Navbar from './components/Navbar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import { AttendanceCapture } from './components/AttendanceCapture';
 import { useAuth } from './hooks/useAuth';
 import { useUserRole } from './hooks/useUserRole';
 import { Toaster, toast } from 'react-hot-toast';
@@ -19,13 +20,18 @@ function App() {
   const { user, isAuthenticated, isLoading, login, signup, logout, resetPassword } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
 
+  // Attendance tracking state
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceEventType, setAttendanceEventType] = useState<'login' | 'logout'>('login');
+  const [pendingLogout, setPendingLogout] = useState(false);
+
   // Check URL for reset password flow
   useEffect(() => {
     // Check URL parameters for reset password flow
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get('access_token');
     const type = urlParams.get('type');
-    
+
     if (accessToken && type === 'recovery') {
       setAuthMode('reset-password');
     }
@@ -38,6 +44,15 @@ function App() {
     const result = await login(credentials);
     if (result.success) {
       toast.success('Welcome back! Successfully logged in.');
+
+      // Trigger attendance capture for non-admin users
+      // We'll check the role after a short delay to ensure role is loaded
+      setTimeout(() => {
+        if (!isAdmin) {
+          setAttendanceEventType('login');
+          setShowAttendanceModal(true);
+        }
+      }, 500);
     } else {
       if (result.error?.includes('Invalid')) {
         toast.error('Invalid email or password. Please try again.');
@@ -67,8 +82,25 @@ function App() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    toast.success('Successfully logged out. See you again!');
+    // For non-admin users, show attendance capture modal before logout
+    if (!isAdmin) {
+      setAttendanceEventType('logout');
+      setShowAttendanceModal(true);
+      setPendingLogout(true);
+    } else {
+      // Admin users can logout directly
+      await logout();
+      toast.success('Successfully logged out. See you again!');
+    }
+  };
+
+  const handleAttendanceSuccess = async () => {
+    // If this was a logout attendance, complete the logout
+    if (pendingLogout) {
+      await logout();
+      toast.success('Successfully logged out. See you again!');
+      setPendingLogout(false);
+    }
   };
 
   const handleResetPassword = async (email: string) => {
@@ -130,11 +162,11 @@ function App() {
 
       <Routes>
         {/* Reset Password Route - accessible without authentication */}
-        <Route 
-          path="/reset-password" 
-          element={<ResetPasswordForm />} 
+        <Route
+          path="/reset-password"
+          element={<ResetPasswordForm />}
         />
-        
+
         {/* Authenticated Routes */}
         {isAuthenticated && user ? (
           <>
@@ -214,7 +246,29 @@ function App() {
           </>
         )}
       </Routes>
-      
+
+      {/* Attendance Capture Modal - Show for non-admin authenticated users */}
+      {isAuthenticated && user && !isAdmin && (
+        <AttendanceCapture
+          isOpen={showAttendanceModal}
+          onClose={() => {
+            setShowAttendanceModal(false);
+            // If this was a logout attendance and user closed without submitting, cancel logout
+            if (pendingLogout) {
+              setPendingLogout(false);
+              toast('Logout cancelled', {
+                icon: 'ℹ️',
+              });
+            }
+          }}
+          userId={user.id}
+          userName={user.name}
+          userRole={role || 'user'}
+          eventType={attendanceEventType}
+          onSuccess={handleAttendanceSuccess}
+        />
+      )}
+
       {/* PWA Install Prompt - Show only when authenticated */}
       {isAuthenticated && <PWAInstallPrompt />}
     </Router>
