@@ -143,66 +143,38 @@ export const AttendanceReportDashboard: React.FC = () => {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 font-medium">Total Employees</p>
+                            <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">Total Employees</p>
                             <p className="text-3xl font-bold text-gray-900 mt-2">{summary.totalEmployees}</p>
                         </div>
-                        <Users className="h-10 w-10 text-blue-600" />
-                    </div>
-                </div>
-
-                <div className="bg-green-50 rounded-lg shadow-sm border border-green-200 p-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-green-700 font-medium">Present Today</p>
-                            <p className="text-3xl font-bold text-green-900 mt-2">{summary.presentToday}</p>
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                            <Users className="h-8 w-8 text-blue-600" />
                         </div>
-                        <CheckCircle className="h-10 w-10 text-green-600" />
-                    </div>
-                </div>
-
-                <div className="bg-yellow-50 rounded-lg shadow-sm border border-yellow-200 p-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-yellow-700 font-medium">Late Today</p>
-                            <p className="text-3xl font-bold text-yellow-900 mt-2">{summary.lateToday}</p>
-                        </div>
-                        <AlertCircle className="h-10 w-10 text-yellow-600" />
-                    </div>
-                </div>
-
-                <div className="bg-red-50 rounded-lg shadow-sm border border-red-200 p-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-red-700 font-medium">Absent Today</p>
-                            <p className="text-3xl font-bold text-red-900 mt-2">{summary.absentToday}</p>
-                        </div>
-                        <XCircle className="h-10 w-10 text-red-600" />
                     </div>
                 </div>
             </div>
 
             {/* Filters and View Mode Toggle */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* View Mode Toggle */}
-                    <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1">
+                    <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
                         <button
                             onClick={() => setViewMode('today')}
-                            className={`px-4 py-2 rounded-md font-medium transition-colors ${viewMode === 'today'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-600 hover:bg-gray-100'
+                            className={`px-4 py-2 rounded-md font-medium text-sm transition-all ${viewMode === 'today'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             Today's Attendance
                         </button>
                         <button
                             onClick={() => setViewMode('history')}
-                            className={`px-4 py-2 rounded-md font-medium transition-colors ${viewMode === 'history'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-600 hover:bg-gray-100'
+                            className={`px-4 py-2 rounded-md font-medium text-sm transition-all ${viewMode === 'history'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             History
@@ -217,132 +189,131 @@ export const AttendanceReportDashboard: React.FC = () => {
                             placeholder="Search by employee name..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
                         />
                     </div>
 
                     {/* Date Range Filters (only for history view) */}
                     {viewMode === 'history' && (
-                        <>
-                            <div className="flex items-center gap-2">
-                                <Calendar className="h-5 w-5 text-gray-400" />
+                        <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                            <div className="relative">
                                 <input
                                     type="date"
                                     value={filters.startDate || ''}
                                     onChange={(e) => handleDateChange('start', e.target.value)}
-                                    className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                                    className="pl-3 pr-2 py-1.5 bg-transparent border-none focus:ring-0 text-sm text-gray-600"
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-gray-500">to</span>
+                            <span className="text-gray-400">-</span>
+                            <div className="relative">
                                 <input
                                     type="date"
                                     value={filters.endDate || ''}
                                     onChange={(e) => handleDateChange('end', e.target.value)}
-                                    className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                                    className="pl-2 pr-3 py-1.5 bg-transparent border-none focus:ring-0 text-sm text-gray-600"
                                 />
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* Content */}
             {isLoading ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-4">Loading attendance data...</p>
+                    <p className="text-gray-500 mt-4 font-medium">Loading attendance data...</p>
                 </div>
             ) : viewMode === 'today' ? (
                 /* Today's Attendance View */
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            Today's Attendance - {formatDateForDisplay(new Date().toISOString())}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h2 className="text-lg font-bold text-gray-900">
+                            Today's Attendance
                         </h2>
+                        <span className="text-sm text-gray-500 font-medium bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
+                            {formatDateForDisplay(new Date().toISOString())}
+                        </span>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Employee
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Login Time
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Login Image
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Logout Time
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Logout Image
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Work Duration
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-100">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Login Time</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Login Image</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Logout Time</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Logout Image</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Work Duration</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-50">
                                 {filteredTodayAttendance.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                                            No attendance records for today
+                                        <td colSpan={7} className="px-6 py-16 text-center">
+                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                <Users className="h-12 w-12 mb-3 opacity-20" />
+                                                <p className="text-lg font-medium text-gray-500">No attendance records for today</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredTodayAttendance.map((attendance) => (
-                                        <tr key={attendance.userId} className="hover:bg-gray-50">
+                                        <tr key={attendance.userId} className="hover:bg-blue-50/30 transition-colors group">
                                             <td className="px-6 py-4">
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{attendance.userName}</div>
-                                                    <div className="text-sm text-gray-500">{attendance.userRole}</div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                                                        {attendance.userName.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">{attendance.userName}</div>
+                                                        <div className="text-xs text-gray-500">{attendance.userRole}</div>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">
                                                 {attendance.loginTime ? formatTimeForDisplay(attendance.loginTime) : '-'}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {attendance.loginImage ? (
                                                     <button
                                                         onClick={() => setSelectedImage(attendance.loginImage!)}
-                                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="View Login Image"
                                                     >
-                                                        <ImageIcon className="h-4 w-4" />
-                                                        View
+                                                        <ImageIcon className="h-5 w-5" />
                                                     </button>
                                                 ) : (
-                                                    <span className="text-gray-400 text-sm">No image</span>
+                                                    <span className="text-gray-300">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">
                                                 {attendance.logoutTime ? formatTimeForDisplay(attendance.logoutTime) : '-'}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {attendance.logoutImage ? (
                                                     <button
                                                         onClick={() => setSelectedImage(attendance.logoutImage!)}
-                                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="View Logout Image"
                                                     >
-                                                        <ImageIcon className="h-4 w-4" />
-                                                        View
+                                                        <ImageIcon className="h-5 w-5" />
                                                     </button>
                                                 ) : (
-                                                    <span className="text-gray-400 text-sm">No image</span>
+                                                    <span className="text-gray-300">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">
-                                                {attendance.workDuration || '-'}
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {attendance.workDuration ? (
+                                                    <span className="px-2.5 py-1 bg-gray-100 rounded-md font-medium text-gray-700">
+                                                        {attendance.workDuration}
+                                                    </span>
+                                                ) : '-'}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(attendance.status)} flex items-center gap-2 w-fit`}>
-                                                    {getStatusIcon(attendance.status)}
-                                                    {attendance.status.toUpperCase()}
+                                                <span className="text-sm text-gray-600 font-mono">
+                                                    {attendance.ipAddress || '-'}
                                                 </span>
                                             </td>
                                         </tr>
@@ -354,78 +325,80 @@ export const AttendanceReportDashboard: React.FC = () => {
                 </div>
             ) : (
                 /* History View */
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-4 bg-gray-50 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">Attendance History</h2>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                        <h2 className="text-lg font-bold text-gray-900">Attendance History</h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Employee
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Event Type
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Date & Time
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Image
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Browser
-                                    </th>
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-100">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Event Type</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Browser</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-50">
                                 {filteredRecords.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                            No attendance records found
+                                        <td colSpan={5} className="px-6 py-16 text-center">
+                                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                                <Search className="h-12 w-12 mb-3 opacity-20" />
+                                                <p className="text-lg font-medium text-gray-500">No attendance records found</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredRecords.map((record) => (
-                                        <tr key={record.id} className="hover:bg-gray-50">
+                                        <tr key={record.id} className="hover:bg-blue-50/30 transition-colors">
                                             <td className="px-6 py-4">
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{record.userName}</div>
-                                                    <div className="text-sm text-gray-500">{record.userRole}</div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
+                                                        {record.userName.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">{record.userName}</div>
+                                                        <div className="text-xs text-gray-500">{record.userRole}</div>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${record.eventType === 'login'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold border shadow-sm ${record.eventType === 'login'
+                                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                                    : 'bg-blue-50 text-blue-700 border-blue-200'
                                                     }`}>
                                                     {record.eventType === 'login' ? 'Login' : 'Logout'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900">
-                                                    {formatDateForDisplay(record.timestamp)}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {formatTimeForDisplay(record.timestamp)}
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {formatDateForDisplay(record.timestamp)}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {formatTimeForDisplay(record.timestamp)}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 {record.imageData ? (
                                                     <button
                                                         onClick={() => setSelectedImage(record.imageData!)}
-                                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm"
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="View Image"
                                                     >
-                                                        <ImageIcon className="h-4 w-4" />
-                                                        View
+                                                        <ImageIcon className="h-5 w-5" />
                                                     </button>
                                                 ) : (
-                                                    <span className="text-gray-400 text-sm">No image</span>
+                                                    <span className="text-gray-300">-</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">
-                                                {record.browserInfo || '-'}
+                                                <span className="truncate max-w-xs block" title={record.browserInfo}>
+                                                    {record.browserInfo || '-'}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))
@@ -439,20 +412,20 @@ export const AttendanceReportDashboard: React.FC = () => {
             {/* Image Modal */}
             {selectedImage && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
                     onClick={() => setSelectedImage(null)}
                 >
                     <div className="relative max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
                         <button
                             onClick={() => setSelectedImage(null)}
-                            className="absolute -top-12 right-0 text-white hover:text-gray-300 bg-black bg-opacity-50 p-2 rounded-lg transition-colors"
+                            className="absolute -top-12 right-0 text-white hover:text-gray-300 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors backdrop-blur-md"
                         >
                             <X className="h-6 w-6" />
                         </button>
                         <img
                             src={selectedImage}
                             alt="Attendance"
-                            className="w-full h-auto rounded-lg shadow-2xl"
+                            className="w-full h-auto rounded-xl shadow-2xl ring-1 ring-white/20"
                         />
                     </div>
                 </div>

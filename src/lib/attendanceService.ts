@@ -10,7 +10,8 @@ export const recordAttendance = async (
     userName: string,
     userRole: string,
     eventType: 'login' | 'logout',
-    imageData?: string
+    imageData?: string,
+    ipAddress?: string
 ): Promise<{ success: boolean; error?: string }> => {
     try {
         // Don't record attendance for admin users
@@ -42,7 +43,8 @@ export const recordAttendance = async (
                 event_type: eventType,
                 timestamp: timestamp,
                 image_data: formattedImage,
-                browser_info: browserInfo
+                browser_info: browserInfo,
+                ip_address: ipAddress
             });
 
         if (error) {
@@ -108,6 +110,7 @@ export const getAttendanceRecords = async (
             timestamp: record.timestamp,
             imageData: record.image_data,
             browserInfo: record.browser_info,
+            ipAddress: record.ip_address,
             createdAt: record.created_at
         }));
     } catch (error) {
@@ -159,6 +162,7 @@ export const getTodayAttendance = async (): Promise<DailyAttendance[]> => {
                 userAttendance[userId].loginTime = record.timestamp;
                 userAttendance[userId].loginImage = record.image_data;
                 userAttendance[userId].status = 'present';
+                userAttendance[userId].ipAddress = record.ip_address;
             } else if (record.event_type === 'logout') {
                 userAttendance[userId].logoutTime = record.timestamp;
                 userAttendance[userId].logoutImage = record.image_data;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { hasLoggedInToday } from './lib/attendanceService';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginForm } from './components/LoginForm';
 import { SignupForm } from './components/SignupForm';
@@ -40,6 +41,22 @@ function App() {
   // Use dynamic role check based on user role in the database
   const { role, isAdmin, isTeamLeader, isSalesExecutive, isSalesTeamLeader, isOperationsTeamLeader, isOperationsTeam, canManageUsers, canAccessOperations, loading: roleLoading } = useUserRole(user?.id);
 
+  // Check for existing attendance on mount/auth change
+  useEffect(() => {
+    const checkAttendance = async () => {
+      if (isAuthenticated && user && !isAdmin && !isLoading && !roleLoading) {
+        // Check if user has already logged in today
+        const hasLoggedIn = await hasLoggedInToday(user.id);
+        if (!hasLoggedIn) {
+          setAttendanceEventType('login');
+          setShowAttendanceModal(true);
+        }
+      }
+    };
+
+    checkAttendance();
+  }, [isAuthenticated, user, isAdmin, isLoading, roleLoading]);
+
   const handleLogin = async (credentials: { email: string; password: string }) => {
     const result = await login(credentials);
     if (result.success) {
@@ -49,8 +66,7 @@ function App() {
       // We'll check the role after a short delay to ensure role is loaded
       setTimeout(() => {
         if (!isAdmin) {
-          setAttendanceEventType('login');
-          setShowAttendanceModal(true);
+          // Check if already logged in today is handled by the useEffect
         }
       }, 500);
     } else {

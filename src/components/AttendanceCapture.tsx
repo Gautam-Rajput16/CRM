@@ -1,6 +1,6 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
-import { Camera, X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Camera, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { recordAttendance } from '../lib/attendanceService';
 import { toast } from 'react-hot-toast';
 
@@ -29,6 +29,20 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [cameraError, setCameraError] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
+    const [ipAddress, setIpAddress] = useState<string>('');
+
+    useEffect(() => {
+        const fetchIp = async () => {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                setIpAddress(data.ip);
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+            }
+        };
+        fetchIp();
+    }, []);
 
     const videoConstraints = {
         width: 1280,
@@ -79,7 +93,8 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
                 userName,
                 userRole,
                 eventType,
-                capturedImage || undefined
+                capturedImage || undefined,
+                ipAddress
             );
 
             if (result.success) {
@@ -97,36 +112,7 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
         }
     };
 
-    const handleSkip = async () => {
-        const confirmSkip = window.confirm(
-            'Are you sure you want to skip image capture? This may affect your attendance record.'
-        );
 
-        if (!confirmSkip) return;
-
-        setIsSubmitting(true);
-        try {
-            const result = await recordAttendance(
-                userId,
-                userName,
-                userRole,
-                eventType
-            );
-
-            if (result.success) {
-                toast.success(`${eventType === 'login' ? 'Login' : 'Logout'} recorded without image`);
-                onSuccess?.();
-                onClose();
-            } else {
-                toast.error(result.error || 'Failed to record attendance');
-            }
-        } catch (error: any) {
-            console.error('Error submitting attendance:', error);
-            toast.error(error.message || 'Failed to record attendance');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const handleUserMediaError = useCallback(() => {
         setCameraError(true);
@@ -153,13 +139,6 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        disabled={isSubmitting}
-                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
                 </div>
 
                 {/* Content */}
@@ -181,13 +160,7 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
                                     <RefreshCw className="h-4 w-4" />
                                     Retry
                                 </button>
-                                <button
-                                    onClick={handleSkip}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                >
-                                    {isSubmitting ? 'Processing...' : 'Skip Image'}
-                                </button>
+
                             </div>
                         </div>
                     ) : (
@@ -281,13 +254,7 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
                                     </>
                                 ) : (
                                     <>
-                                        <button
-                                            onClick={handleSkip}
-                                            disabled={isSubmitting || isCapturing}
-                                            className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
-                                        >
-                                            Skip Image
-                                        </button>
+
                                         <button
                                             onClick={handleCapture}
                                             disabled={isCapturing}

@@ -7,6 +7,7 @@ export interface AttendanceRecord {
     timestamp: string;
     imageData?: string;
     browserInfo?: string;
+    ipAddress?: string;
     createdAt: string;
 }
 
@@ -34,4 +35,5 @@ export interface DailyAttendance {
     logoutImage?: string;
     status: 'present' | 'late' | 'absent' | 'partial';
     workDuration?: string;
+    ipAddress?: string;
 }
