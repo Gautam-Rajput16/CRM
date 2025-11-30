@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { User, AuthState } from '../types/User';
 import { supabase } from '../lib/supabase';
 import type { AuthError } from '@supabase/supabase-js';
+import { useSessionTimeout } from './useSessionTimeout';
+
 
 interface LoginCredentials {
   email: string;
@@ -26,7 +28,7 @@ export const useAuth = () => {
     const getSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Error getting session:', error);
           setAuthState({
@@ -71,7 +73,8 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
+
         if (session?.user) {
           const user: User = {
             id: session.user.id,
@@ -97,6 +100,16 @@ export const useAuth = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Set up session timeout - logout after 12 hours
+  useSessionTimeout({
+    isAuthenticated: authState.isAuthenticated,
+    onTimeout: useCallback(async () => {
+      console.log('Session timeout - automatically logging out user');
+      await logout();
+    }, []), // We'll define logout below, so this creates a stable reference
+  });
+
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
