@@ -225,7 +225,7 @@ export const useTaskStatusChanges = (isAdmin: boolean = false) => {
       // Mark as initialized after first fetch
       if (!isInitializedRef.current) {
         isInitializedRef.current = true;
-        console.log('Task status tracking initialized with', tasks.length, 'tasks');
+        // console.log('Task status tracking initialized with', tasks.length, 'tasks');
       }
 
       // Add new changes to the list
@@ -278,7 +278,7 @@ export const useTaskStatusChanges = (isAdmin: boolean = false) => {
   useEffect(() => {
     if (!isAdmin) return;
 
-    console.log('Initializing task status change tracking...');
+    // console.log('Initializing task status change tracking...');
 
     // Load stored changes
     loadStoredChanges();
@@ -303,7 +303,7 @@ export const useTaskStatusChanges = (isAdmin: boolean = false) => {
 
     // Poll every 10 seconds
     const interval = setInterval(() => {
-      console.log('Polling for status changes...');
+      // console.log('Polling for status changes...');
       checkForStatusChanges();
     }, 10000);
 

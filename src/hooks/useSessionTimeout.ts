@@ -52,15 +52,12 @@ export const useSessionTimeout = ({ isAuthenticated, onTimeout }: UseSessionTime
 
         // If session has already expired, logout immediately
         if (remainingTime <= 0) {
-            console.log('Session expired - logging out');
             onTimeout();
             return;
         }
 
         // Set timeout for remaining time
-        console.log(`Session will expire in ${Math.round(remainingTime / 1000 / 60)} minutes`);
         timeoutRef.current = setTimeout(() => {
-            console.log('Session timeout reached - logging out');
             onTimeout();
         }, remainingTime);
 
@@ -71,7 +68,6 @@ export const useSessionTimeout = ({ isAuthenticated, onTimeout }: UseSessionTime
             const elapsed = now - loginTimestamp;
 
             if (elapsed >= SESSION_TIMEOUT_MS) {
-                console.log('Session timeout detected during periodic check - logging out');
                 onTimeout();
             }
         }, CHECK_INTERVAL_MS);
@@ -94,7 +90,6 @@ export const useSessionTimeout = ({ isAuthenticated, onTimeout }: UseSessionTime
         const handleStorageChange = (e: StorageEvent) => {
             // If login time is removed in another tab (logout), trigger logout here too
             if (e.key === LOGIN_TIME_KEY && e.newValue === null) {
-                console.log('Session cleared in another tab - logging out');
                 onTimeout();
             }
         };

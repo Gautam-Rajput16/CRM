@@ -351,13 +351,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const sidebarItems = getAllSidebarItems();
 
   // Validate and correct activeSection based on available sidebar items
+  // Only validate after profiles are loaded to avoid resetting during initial load
   useEffect(() => {
+    // Wait for profiles to load before validating
+    if (allProfiles.length === 0) return;
+
     const validSectionIds = sidebarItems.map(item => item.id);
     if (!validSectionIds.includes(activeSection)) {
       // If saved section is not valid for current user role, default to 'dashboard'
       setActiveSection('dashboard');
     }
-  }, [sidebarItems, activeSection]);
+  }, [sidebarItems, activeSection, allProfiles.length]);
 
   // Filter leads based on user role
   const filteredLeads = leads.filter(lead => {
@@ -1247,13 +1251,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
       {/* Sidebar */}
       <div className={`
-        ${sidebarCollapsed ? 'w-16' : 'w-64'} 
+        ${sidebarCollapsed ? 'w-16' : 'w-72'} 
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         fixed inset-y-0 left-0 z-50
         bg-blue-900 shadow-lg transition-all duration-300 flex flex-col
       `}>
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-blue-800">
+        <div className="flex-shrink-0 p-4 border-b border-blue-800">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
               <div>
@@ -1270,8 +1274,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* Sidebar Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        {/* Sidebar Navigation - Scrollable */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-blue-900">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
@@ -1295,8 +1299,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           ))}
         </nav>
 
-        {/* User Info */}
-        <div className="p-4 border-t border-blue-800 relative">
+        {/* User Info - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-blue-800 relative">
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} mb-3`}>
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
@@ -1361,8 +1365,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           )}
         </div>
 
-        {/* Logout Button */}
-        <div className="p-4">
+        {/* Logout Button - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-blue-800">
           <button
             onClick={handleLogout}
             className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg transition-colors text-red-300 hover:bg-red-900 hover:text-white`}

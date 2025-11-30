@@ -105,10 +105,10 @@ export const useAuth = () => {
   useSessionTimeout({
     isAuthenticated: authState.isAuthenticated,
     onTimeout: useCallback(async () => {
-      console.log('Session timeout - automatically logging out user');
       await logout();
     }, []), // We'll define logout below, so this creates a stable reference
   });
+
 
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
