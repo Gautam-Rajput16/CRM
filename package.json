@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4",
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.56.0",
     "chart.js": "^4.5.0",
