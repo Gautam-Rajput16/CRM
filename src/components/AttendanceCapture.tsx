@@ -88,13 +88,28 @@ export const AttendanceCapture: React.FC<AttendanceCaptureProps> = ({
         setIsSubmitting(true);
 
         try {
+            // Ensure we have an IP address before submitting
+            let finalIpAddress = ipAddress;
+            if (!finalIpAddress) {
+                try {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    finalIpAddress = data.ip;
+                    setIpAddress(finalIpAddress);
+                } catch (error) {
+                    console.error('Error fetching IP on submit:', error);
+                    // Continue without IP if fetch fails
+                    finalIpAddress = 'Unknown';
+                }
+            }
+
             const result = await recordAttendance(
                 userId,
                 userName,
                 userRole,
                 eventType,
                 capturedImage || undefined,
-                ipAddress
+                finalIpAddress
             );
 
             if (result.success) {

@@ -9,11 +9,13 @@ import {
     X,
     CheckCircle,
     XCircle,
-    AlertCircle
+    AlertCircle,
+    Trash2
 } from 'lucide-react';
 import { useAttendance } from '../hooks/useAttendance';
 import { AttendanceFilters, DailyAttendance } from '../types/Attendance';
 import { formatTimeForDisplay, formatDateForDisplay } from '../utils/imageUtils';
+import { deleteAttendanceRecord, bulkDeleteAttendanceRecordsByDateRange } from '../lib/attendanceService';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
@@ -27,6 +29,11 @@ export const AttendanceReportDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'today' | 'history'>('today');
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [deletingRecordId, setDeletingRecordId] = useState<string | null>(null);
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+    const [bulkDeleteStartDate, setBulkDeleteStartDate] = useState('');
+    const [bulkDeleteEndDate, setBulkDeleteEndDate] = useState('');
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
     const { records, todayAttendance, summary, isLoading, fetchRecords, fetchTodayAttendance, fetchSummary } = useAttendance();
 
@@ -84,6 +91,88 @@ export const AttendanceReportDashboard: React.FC = () => {
         }
     };
 
+    const handleDeleteRecord = async (recordId: string, userName: string) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete the attendance record for ${userName}? This action cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
+        setDeletingRecordId(recordId);
+        try {
+            const result = await deleteAttendanceRecord(recordId);
+
+            if (result.success) {
+                toast.success('Attendance record deleted successfully');
+                // Refresh data
+                if (viewMode === 'history') {
+                    fetchRecords(filters);
+                } else {
+                    fetchTodayAttendance();
+                }
+                fetchSummary();
+            } else {
+                toast.error(result.error || 'Failed to delete record');
+            }
+        } catch (error) {
+            console.error('Error deleting record:', error);
+            toast.error('Failed to delete record');
+        } finally {
+            setDeletingRecordId(null);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!bulkDeleteStartDate || !bulkDeleteEndDate) {
+            toast.error('Please select both start and end dates');
+            return;
+        }
+
+        const start = new Date(bulkDeleteStartDate);
+        const end = new Date(bulkDeleteEndDate);
+
+        if (start > end) {
+            toast.error('Start date must be before end date');
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Are you sure you want to delete all attendance records from ${bulkDeleteStartDate} to ${bulkDeleteEndDate}? This action cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
+        setIsBulkDeleting(true);
+        try {
+            const result = await bulkDeleteAttendanceRecordsByDateRange(
+                bulkDeleteStartDate,
+                bulkDeleteEndDate
+            );
+
+            if (result.success) {
+                toast.success(`Successfully deleted ${result.count || 0} attendance record(s)`);
+                setShowBulkDeleteModal(false);
+                setBulkDeleteStartDate('');
+                setBulkDeleteEndDate('');
+                // Refresh data
+                if (viewMode === 'history') {
+                    fetchRecords(filters);
+                } else {
+                    fetchTodayAttendance();
+                }
+                fetchSummary();
+            } else {
+                toast.error(result.error || 'Failed to delete records');
+            }
+        } catch (error) {
+            console.error('Error bulk deleting records:', error);
+            toast.error('Failed to delete records');
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
+
+
     const filteredTodayAttendance = todayAttendance.filter(attendance =>
         attendance.userName.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -131,13 +220,22 @@ export const AttendanceReportDashboard: React.FC = () => {
                         <h1 className="text-2xl font-bold text-gray-900">Attendance Tracking</h1>
                         <p className="text-gray-600 mt-1">Monitor employee attendance and work hours</p>
                     </div>
-                    <button
-                        onClick={handleExportToExcel}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-                    >
-                        <Download className="h-4 w-4" />
-                        Export to Excel
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowBulkDeleteModal(true)}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Bulk Delete
+                        </button>
+                        <button
+                            onClick={handleExportToExcel}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export to Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -246,12 +344,13 @@ export const AttendanceReportDashboard: React.FC = () => {
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Logout Image</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Work Duration</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {filteredTodayAttendance.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-16 text-center">
+                                        <td colSpan={8} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center justify-center text-gray-400">
                                                 <Users className="h-12 w-12 mb-3 opacity-20" />
                                                 <p className="text-lg font-medium text-gray-500">No attendance records for today</p>
@@ -316,6 +415,16 @@ export const AttendanceReportDashboard: React.FC = () => {
                                                     {attendance.ipAddress || '-'}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button
+                                                    onClick={() => handleDeleteRecord(attendance.userId, attendance.userName)}
+                                                    disabled={deletingRecordId === attendance.userId}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete Record"
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -338,12 +447,13 @@ export const AttendanceReportDashboard: React.FC = () => {
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Browser</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {filteredRecords.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-16 text-center">
+                                        <td colSpan={6} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center justify-center text-gray-400">
                                                 <Search className="h-12 w-12 mb-3 opacity-20" />
                                                 <p className="text-lg font-medium text-gray-500">No attendance records found</p>
@@ -400,6 +510,16 @@ export const AttendanceReportDashboard: React.FC = () => {
                                                     {record.browserInfo || '-'}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button
+                                                    onClick={() => handleDeleteRecord(record.id, record.userName)}
+                                                    disabled={deletingRecordId === record.id}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete Record"
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -427,6 +547,85 @@ export const AttendanceReportDashboard: React.FC = () => {
                             alt="Attendance"
                             className="w-full h-auto rounded-xl shadow-2xl ring-1 ring-white/20"
                         />
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Modal */}
+            {showBulkDeleteModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
+                    onClick={() => setShowBulkDeleteModal(false)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">Bulk Delete by Date Range</h3>
+                            <button
+                                onClick={() => setShowBulkDeleteModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-4">
+                            Select a date range to delete all attendance records within that period. This action cannot be undone.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Start Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={bulkDeleteStartDate}
+                                    onChange={(e) => setBulkDeleteStartDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    End Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={bulkDeleteEndDate}
+                                    onChange={(e) => setBulkDeleteEndDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => setShowBulkDeleteModal(false)}
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting || !bulkDeleteStartDate || !bulkDeleteEndDate}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isBulkDeleting ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete Records
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

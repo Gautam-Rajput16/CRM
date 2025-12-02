@@ -1250,8 +1250,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        ${sidebarCollapsed ? 'w-16' : 'w-72'} 
+      <div className={` 
+        ${sidebarCollapsed ? 'w-16' : 'w-68'} 
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         fixed inset-y-0 left-0 z-50
         bg-blue-900 shadow-lg transition-all duration-300 flex flex-col

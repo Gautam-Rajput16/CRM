@@ -61,6 +61,68 @@ export const recordAttendance = async (
 };
 
 /**
+ * Delete an attendance record
+ */
+export const deleteAttendanceRecord = async (
+    recordId: string
+): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { error } = await supabase
+            .from('attendance_records')
+            .delete()
+            .eq('id', recordId);
+
+        if (error) {
+            console.error('Error deleting attendance record:', error);
+            return { success: false, error: error.message };
+        }
+
+        console.log(`Attendance record deleted: ${recordId}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to delete attendance record:', error);
+        return { success: false, error: error.message || 'Failed to delete attendance record' };
+    }
+};
+
+/**
+ * Bulk delete attendance records by date range
+ */
+export const bulkDeleteAttendanceRecordsByDateRange = async (
+    startDate: string,
+    endDate: string
+): Promise<{ success: boolean; count?: number; error?: string }> => {
+    try {
+        // Convert dates to ISO format for comparison
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        const { data, error } = await supabase
+            .from('attendance_records')
+            .delete()
+            .gte('timestamp', start.toISOString())
+            .lte('timestamp', end.toISOString())
+            .select();
+
+        if (error) {
+            console.error('Error bulk deleting attendance records:', error);
+            return { success: false, error: error.message };
+        }
+
+        const count = data?.length || 0;
+        console.log(`Bulk deleted ${count} attendance records from ${startDate} to ${endDate}`);
+        return { success: true, count };
+    } catch (error: any) {
+        console.error('Failed to bulk delete attendance records:', error);
+        return { success: false, error: error.message || 'Failed to bulk delete attendance records' };
+    }
+};
+
+
+
+/**
  * Get attendance records with filters
  */
 export const getAttendanceRecords = async (
