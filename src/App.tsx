@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { hasLoggedInToday } from './lib/attendanceService';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginForm } from './components/LoginForm';
@@ -13,6 +13,7 @@ import OperationsTeamLeaderDashboard from './components/OperationsTeamLeaderDash
 import Navbar from './components/Navbar';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { AttendanceCapture } from './components/AttendanceCapture';
+import { LogoutReminder } from './components/LogoutReminder';
 import { useAuth } from './hooks/useAuth';
 import { useUserRole } from './hooks/useUserRole';
 import { Toaster, toast } from 'react-hot-toast';
@@ -39,7 +40,7 @@ function App() {
   }, []);
 
   // Use dynamic role check based on user role in the database
-  const { role, isAdmin, isTeamLeader, isSalesExecutive, isSalesTeamLeader, isOperationsTeamLeader, isOperationsTeam, canManageUsers, canAccessOperations, loading: roleLoading } = useUserRole(user?.id);
+  const { role, isAdmin, isTeamLeader, isSalesExecutive, isSalesTeamLeader, isOperationsTeamLeader, isOperationsTeam, loading: roleLoading } = useUserRole(user?.id);
 
   // Check for existing attendance on mount/auth change
   useEffect(() => {
@@ -119,6 +120,8 @@ function App() {
     }
   };
 
+
+
   const handleResetPassword = async (email: string) => {
     const result = await resetPassword(email);
     if (result.success) {
@@ -127,13 +130,6 @@ function App() {
       toast.error(result.error || 'Failed to send reset email. Please try again.');
     }
     return result;
-  };
-
-  const handlePasswordReset = () => {
-    setAuthMode('login');
-    // Clear URL parameters
-    window.history.replaceState({}, document.title, window.location.pathname);
-    toast.success('Password updated successfully! Please log in with your new password.');
   };
 
   if (isLoading) {
@@ -284,6 +280,9 @@ function App() {
           onSuccess={handleAttendanceSuccess}
         />
       )}
+
+      {/* Daily Logout Reminder - Show for all authenticated users */}
+      {isAuthenticated && <LogoutReminder />}
 
       {/* PWA Install Prompt - Show only when authenticated */}
       {isAuthenticated && <PWAInstallPrompt />}
