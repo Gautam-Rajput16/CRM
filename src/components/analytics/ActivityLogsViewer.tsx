@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Activity, Search, Clock, ArrowRight, Filter, User } from 'lucide-react';
-import { getCallLogs, getStatusChangeLogs } from '../../lib/activityLogger';
+import { Phone, Activity, Search, Clock, ArrowRight, Filter, User, Trash2, X } from 'lucide-react';
+import { getCallLogs, getStatusChangeLogs, deleteCallLog, deleteStatusChangeLog, bulkDeleteCallLogsByDateRange, bulkDeleteStatusChangeLogsByDateRange } from '../../lib/activityLogger';
 import { supabase } from '../../lib/supabase';
 import { getDisplayStatus } from '../../utils/statusDisplay';
+import { toast } from 'react-hot-toast';
 
 interface ActivityLogsViewerProps {
   employeeId?: string;
@@ -64,6 +65,12 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
     start: startDate || '',
     end: endDate || ''
   });
+  const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteStartDate, setBulkDeleteStartDate] = useState('');
+  const [bulkDeleteEndDate, setBulkDeleteEndDate] = useState('');
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteType, setBulkDeleteType] = useState<'calls' | 'status' | 'both'>('both');
 
   useEffect(() => {
     fetchEmployees();
@@ -129,16 +136,16 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
   ];
 
   const filteredActivities = allActivities.filter(activity => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       activity.lead_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (activity.type === 'call' && activity.lead_phone.includes(searchTerm)) ||
       (activity.employee_name && activity.employee_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesDateRange = (!startDate || new Date(activity.timestamp) >= new Date(startDate)) &&
-                            (!endDate || new Date(activity.timestamp) <= new Date(endDate + 'T23:59:59'));
-    
+      (!endDate || new Date(activity.timestamp) <= new Date(endDate + 'T23:59:59'));
+
     const matchesEmployee = !selectedEmployee || activity.employee_id === selectedEmployee;
-    
+
     return matchesSearch && matchesDateRange && matchesEmployee;
   });
 
@@ -157,9 +164,9 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
         totalStatusChanges: 0
       };
     }
-    
+
     acc[leadKey].activities.push(activity);
-    
+
     if (activity.type === 'call') {
       acc[leadKey].totalCalls++;
       if (!acc[leadKey].lastCallDate || new Date(activity.timestamp) > new Date(acc[leadKey].lastCallDate!)) {
@@ -174,7 +181,7 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
         acc[leadKey].lastStatusDate = activity.timestamp;
       }
     }
-    
+
     return acc;
   }, {} as Record<string, any>);
 
@@ -223,6 +230,93 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
     }
   };
 
+  const handleDeleteLog = async (logId: string, logType: 'call' | 'status', leadName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this ${logType} log for ${leadName}? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingLogId(logId);
+    try {
+      const result = logType === 'call'
+        ? await deleteCallLog(logId)
+        : await deleteStatusChangeLog(logId);
+
+      if (result.success) {
+        toast.success(`${logType === 'call' ? 'Call' : 'Status change'} log deleted successfully`);
+        fetchLogs();
+      } else {
+        toast.error(result.error || 'Failed to delete log');
+      }
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      toast.error('Failed to delete log');
+    } finally {
+      setDeletingLogId(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!bulkDeleteStartDate || !bulkDeleteEndDate) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+
+    const start = new Date(bulkDeleteStartDate);
+    const end = new Date(bulkDeleteEndDate);
+
+    if (start > end) {
+      toast.error('Start date must be before end date');
+      return;
+    }
+
+    const typeText = bulkDeleteType === 'both' ? 'all activity logs' :
+      bulkDeleteType === 'calls' ? 'call logs' : 'status change logs';
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${typeText} from ${bulkDeleteStartDate} to ${bulkDeleteEndDate}? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setIsBulkDeleting(true);
+    try {
+      let totalCount = 0;
+
+      if (bulkDeleteType === 'calls' || bulkDeleteType === 'both') {
+        const result = await bulkDeleteCallLogsByDateRange(bulkDeleteStartDate, bulkDeleteEndDate);
+        if (result.success) {
+          totalCount += result.count || 0;
+        } else {
+          toast.error(result.error || 'Failed to delete call logs');
+          return;
+        }
+      }
+
+      if (bulkDeleteType === 'status' || bulkDeleteType === 'both') {
+        const result = await bulkDeleteStatusChangeLogsByDateRange(bulkDeleteStartDate, bulkDeleteEndDate);
+        if (result.success) {
+          totalCount += result.count || 0;
+        } else {
+          toast.error(result.error || 'Failed to delete status change logs');
+          return;
+        }
+      }
+
+      toast.success(`Successfully deleted ${totalCount} log(s)`);
+      setShowBulkDeleteModal(false);
+      setBulkDeleteStartDate('');
+      setBulkDeleteEndDate('');
+      fetchLogs();
+    } catch (error) {
+      console.error('Error bulk deleting logs:', error);
+      toast.error('Failed to delete logs');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -247,6 +341,13 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
             <Clock className="h-5 w-5 text-blue-600" />
             Activity Logs
           </h2>
+          <button
+            onClick={() => setShowBulkDeleteModal(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Trash2 className="h-4 w-4" />
+            Bulk Delete
+          </button>
         </div>
 
         {/* Filters */}
@@ -368,7 +469,7 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
               return (
                 <div key={lead.lead_id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
                   {/* Lead Header - Always Visible */}
-                  <div 
+                  <div
                     className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={toggleExpanded}
                   >
@@ -385,7 +486,7 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Activity Summary */}
                         <div className="flex items-center gap-4 ml-6">
                           <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
@@ -413,7 +514,7 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
                             </p>
                           )}
                         </div>
-                        
+
                         {/* Expand/Collapse Icon */}
                         <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
                           <ArrowRight className="h-5 w-5 text-gray-400" />
@@ -429,9 +530,8 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
                         <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity History</h4>
                         <div className="space-y-4">
                           {lead.activities.map((activity: any) => (
-                            <div key={activity.activity_id} className={`bg-white border rounded-lg p-4 ${
-                              activity.type === 'call' ? 'border-blue-200' : 'border-green-200'
-                            }`}>
+                            <div key={activity.activity_id} className={`bg-white border rounded-lg p-4 ${activity.type === 'call' ? 'border-blue-200' : 'border-green-200'
+                              }`}>
                               {activity.type === 'call' ? (
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3">
@@ -441,17 +541,26 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
                                     <div>
                                       <p className="font-medium text-gray-900">Call Made</p>
                                       <p className="text-sm text-gray-600">By: {activity.employee_name || 'Unknown'}</p>
-                                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                                        activity.call_type === 'outbound' 
-                                          ? 'bg-blue-100 text-blue-800' 
-                                          : 'bg-green-100 text-green-800'
-                                      }`}>
+                                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${activity.call_type === 'outbound'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-green-100 text-green-800'
+                                        }`}>
                                         {activity.call_type} call
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="text-right text-sm text-gray-500">
-                                    <p>{formatDateTime(activity.timestamp)}</p>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-right text-sm text-gray-500">
+                                      <p>{formatDateTime(activity.timestamp)}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeleteLog(activity.id, 'call', activity.lead_name)}
+                                      disabled={deletingLogId === activity.id}
+                                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title="Delete Log"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
                                   </div>
                                 </div>
                               ) : (
@@ -474,12 +583,22 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right text-sm text-gray-500">
-                                    <p>{formatDateTime(activity.timestamp)}</p>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-right text-sm text-gray-500">
+                                      <p>{formatDateTime(activity.timestamp)}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeleteLog(activity.id, 'status', activity.lead_name)}
+                                      disabled={deletingLogId === activity.id}
+                                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title="Delete Log"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Notes */}
                               {activity.notes && (
                                 <div className="mt-3 p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
@@ -498,6 +617,100 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
           )}
         </div>
       </div>
+
+      {/* Bulk Delete Modal */}
+      {showBulkDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
+          onClick={() => setShowBulkDeleteModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Bulk Delete Activity Logs</h3>
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Select a date range and log type to delete. This action cannot be undone.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Log Type
+                </label>
+                <select
+                  value={bulkDeleteType}
+                  onChange={(e) => setBulkDeleteType(e.target.value as 'calls' | 'status' | 'both')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="both">All Activity Logs</option>
+                  <option value="calls">Call Logs Only</option>
+                  <option value="status">Status Change Logs Only</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={bulkDeleteStartDate}
+                  onChange={(e) => setBulkDeleteStartDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={bulkDeleteEndDate}
+                  onChange={(e) => setBulkDeleteEndDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting || !bulkDeleteStartDate || !bulkDeleteEndDate}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isBulkDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete Logs
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

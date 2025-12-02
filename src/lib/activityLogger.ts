@@ -390,3 +390,122 @@ export const getDailyStatusChangeSummary = async (date: string) => {
     return [];
   }
 };
+
+/**
+ * Delete a call log
+ */
+export const deleteCallLog = async (
+  logId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase
+      .from('call_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) {
+      console.error('Error deleting call log:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`Call log deleted: ${logId}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to delete call log:', error);
+    return { success: false, error: error.message || 'Failed to delete call log' };
+  }
+};
+
+/**
+ * Delete a status change log
+ */
+export const deleteStatusChangeLog = async (
+  logId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase
+      .from('status_change_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) {
+      console.error('Error deleting status change log:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`Status change log deleted: ${logId}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to delete status change log:', error);
+    return { success: false, error: error.message || 'Failed to delete status change log' };
+  }
+};
+
+/**
+ * Bulk delete call logs by date range
+ */
+export const bulkDeleteCallLogsByDateRange = async (
+  startDate: string,
+  endDate: string
+): Promise<{ success: boolean; count?: number; error?: string }> => {
+  try {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from('call_logs')
+      .delete()
+      .gte('call_timestamp', start.toISOString())
+      .lte('call_timestamp', end.toISOString())
+      .select();
+
+    if (error) {
+      console.error('Error bulk deleting call logs:', error);
+      return { success: false, error: error.message };
+    }
+
+    const count = data?.length || 0;
+    console.log(`Bulk deleted ${count} call logs from ${startDate} to ${endDate}`);
+    return { success: true, count };
+  } catch (error: any) {
+    console.error('Failed to bulk delete call logs:', error);
+    return { success: false, error: error.message || 'Failed to bulk delete call logs' };
+  }
+};
+
+/**
+ * Bulk delete status change logs by date range
+ */
+export const bulkDeleteStatusChangeLogsByDateRange = async (
+  startDate: string,
+  endDate: string
+): Promise<{ success: boolean; count?: number; error?: string }> => {
+  try {
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from('status_change_logs')
+      .delete()
+      .gte('change_timestamp', start.toISOString())
+      .lte('change_timestamp', end.toISOString())
+      .select();
+
+    if (error) {
+      console.error('Error bulk deleting status change logs:', error);
+      return { success: false, error: error.message };
+    }
+
+    const count = data?.length || 0;
+    console.log(`Bulk deleted ${count} status change logs from ${startDate} to ${endDate}`);
+    return { success: true, count };
+  } catch (error: any) {
+    console.error('Failed to bulk delete status change logs:', error);
+    return { success: false, error: error.message || 'Failed to bulk delete status change logs' };
+  }
+};
+
