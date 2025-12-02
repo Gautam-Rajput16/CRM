@@ -15,7 +15,8 @@ import {
 import { useAttendance } from '../hooks/useAttendance';
 import { AttendanceFilters, DailyAttendance } from '../types/Attendance';
 import { formatTimeForDisplay, formatDateForDisplay } from '../utils/imageUtils';
-import { deleteAttendanceRecord, bulkDeleteAttendanceRecordsByDateRange } from '../lib/attendanceService';
+import { deleteAttendanceRecord, bulkDeleteAttendanceRecordsByDateRange, getWorkingHoursSummary, formatHoursDisplay } from '../lib/attendanceService';
+import { WorkingHoursModal } from './WorkingHoursModal';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
@@ -34,6 +35,8 @@ export const AttendanceReportDashboard: React.FC = () => {
     const [bulkDeleteStartDate, setBulkDeleteStartDate] = useState('');
     const [bulkDeleteEndDate, setBulkDeleteEndDate] = useState('');
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
+    const [workingHoursSummary, setWorkingHoursSummary] = useState({ totalHours: 0, totalMinutes: 0 });
 
     const { records, todayAttendance, summary, isLoading, fetchRecords, fetchTodayAttendance, fetchSummary } = useAttendance();
 
@@ -46,6 +49,14 @@ export const AttendanceReportDashboard: React.FC = () => {
         }
         fetchSummary();
     }, [filters, viewMode, fetchRecords, fetchTodayAttendance, fetchSummary]);
+
+    useEffect(() => {
+        const loadWorkingHours = async () => {
+            const summary = await getWorkingHoursSummary();
+            setWorkingHoursSummary(summary);
+        };
+        loadWorkingHours();
+    }, [todayAttendance]); // Refresh when attendance changes
 
     const handleDateChange = (type: 'start' | 'end', value: string) => {
         setFilters(prev => ({
@@ -249,6 +260,27 @@ export const AttendanceReportDashboard: React.FC = () => {
                         </div>
                         <div className="p-3 bg-blue-50 rounded-lg">
                             <Users className="h-8 w-8 text-blue-600" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Working Hours Card */}
+                <div
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md cursor-pointer group"
+                    onClick={() => setShowWorkingHoursModal(true)}
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">Working Hours</p>
+                            <div className="flex items-end gap-2 mt-2">
+                                <p className="text-3xl font-bold text-gray-900">
+                                    {formatHoursDisplay(workingHoursSummary.totalMinutes)}
+                                </p>
+                                <p className="text-sm text-gray-500 mb-1">Today</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
+                            <Clock className="h-8 w-8 text-indigo-600" />
                         </div>
                     </div>
                 </div>
@@ -629,6 +661,11 @@ export const AttendanceReportDashboard: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <WorkingHoursModal
+                isOpen={showWorkingHoursModal}
+                onClose={() => setShowWorkingHoursModal(false)}
+            />
         </div>
     );
 };

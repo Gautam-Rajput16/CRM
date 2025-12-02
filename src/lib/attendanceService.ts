@@ -120,6 +120,182 @@ export const bulkDeleteAttendanceRecordsByDateRange = async (
     }
 };
 
+/**
+ * Helper function to calculate working minutes between login and logout
+ */
+const calculateWorkingMinutes = (loginTime: string, logoutTime: string): number => {
+    const login = new Date(loginTime).getTime();
+    const logout = new Date(logoutTime).getTime();
+    return Math.floor((logout - login) / (1000 * 60)); // Convert to minutes
+};
+
+/**
+ * Helper function to format minutes as "Xh Ym"
+ */
+export const formatHoursDisplay = (totalMinutes: number): string => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}h ${minutes}m`;
+};
+
+/**
+ * Get working hours summary for today
+ */
+export const getWorkingHoursSummary = async (): Promise<{ totalHours: number; totalMinutes: number }> => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const { data, error } = await supabase
+            .from('attendance_records')
+            .select('*')
+            .gte('timestamp', today.toISOString())
+            .lt('timestamp', tomorrow.toISOString())
+            .order('timestamp', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching working hours summary:', error);
+            return { totalHours: 0, totalMinutes: 0 };
+        }
+
+        // Group by user and calculate working hours
+        const userSessions: { [key: string]: { login?: string; logout?: string }[] } = {};
+
+        data?.forEach(record => {
+            if (!userSessions[record.user_id]) {
+                userSessions[record.user_id] = [];
+            }
+
+            const lastSession = userSessions[record.user_id][userSessions[record.user_id].length - 1];
+
+            if (record.event_type === 'login') {
+                userSessions[record.user_id].push({ login: record.timestamp });
+            } else if (record.event_type === 'logout' && lastSession && lastSession.login && !lastSession.logout) {
+                lastSession.logout = record.timestamp;
+            }
+        });
+
+        let totalMinutes = 0;
+        Object.values(userSessions).forEach(sessions => {
+            sessions.forEach(session => {
+                if (session.login && session.logout) {
+                    totalMinutes += calculateWorkingMinutes(session.login, session.logout);
+                }
+            });
+        });
+
+        return {
+            totalHours: Math.floor(totalMinutes / 60),
+            totalMinutes
+        };
+    } catch (error) {
+        console.error('Failed to fetch working hours summary:', error);
+        return { totalHours: 0, totalMinutes: 0 };
+    }
+};
+
+/**
+ * Get detailed working hours per employee with date range filter
+ */
+export const getEmployeeWorkingHours = async (filters?: {
+    startDate?: string;
+    endDate?: string;
+}): Promise<any[]> => {
+    try {
+        let startDate = filters?.startDate;
+        let endDate = filters?.endDate;
+
+        if (!startDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            startDate = today.toISOString();
+        }
+
+        if (!endDate) {
+            const tomorrow = new Date(startDate);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            endDate = tomorrow.toISOString();
+        } else {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            endDate = end.toISOString();
+        }
+
+        const { data, error } = await supabase
+            .from('attendance_records')
+            .select('*')
+            .gte('timestamp', startDate)
+            .lte('timestamp', endDate)
+            .order('timestamp', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching employee working hours:', error);
+            return [];
+        }
+
+        // Group by user
+        const userWorkingHours: { [key: string]: any } = {};
+
+        data?.forEach(record => {
+            if (!userWorkingHours[record.user_id]) {
+                userWorkingHours[record.user_id] = {
+                    userId: record.user_id,
+                    userName: record.user_name,
+                    userRole: record.user_role,
+                    sessions: [],
+                    totalMinutes: 0,
+                    daysWorked: new Set(),
+                    firstLogin: null,
+                    lastLogout: null
+                };
+            }
+
+            const userData = userWorkingHours[record.user_id];
+            const recordDate = new Date(record.timestamp).toDateString();
+            userData.daysWorked.add(recordDate);
+
+            if (record.event_type === 'login') {
+                userData.sessions.push({ login: record.timestamp, logout: null });
+                if (!userData.firstLogin || new Date(record.timestamp) < new Date(userData.firstLogin)) {
+                    userData.firstLogin = record.timestamp;
+                }
+            } else if (record.event_type === 'logout') {
+                const lastSession = userData.sessions[userData.sessions.length - 1];
+                if (lastSession && lastSession.login && !lastSession.logout) {
+                    lastSession.logout = record.timestamp;
+                    userData.totalMinutes += calculateWorkingMinutes(lastSession.login, lastSession.logout);
+                }
+                if (!userData.lastLogout || new Date(record.timestamp) > new Date(userData.lastLogout)) {
+                    userData.lastLogout = record.timestamp;
+                }
+            }
+        });
+
+        // Convert to array and calculate stats
+        return Object.values(userWorkingHours).map(user => ({
+            userId: user.userId,
+            userName: user.userName,
+            userRole: user.userRole,
+            totalHours: Math.floor(user.totalMinutes / 60),
+            totalMinutes: user.totalMinutes,
+            formattedHours: formatHoursDisplay(user.totalMinutes),
+            daysWorked: user.daysWorked.size,
+            averageHoursPerDay: user.daysWorked.size > 0
+                ? formatHoursDisplay(Math.floor(user.totalMinutes / user.daysWorked.size))
+                : '0h 0m',
+            firstLogin: user.firstLogin,
+            lastLogout: user.lastLogout,
+            status: user.totalMinutes > 0 ? 'Active' : 'Inactive'
+        })).sort((a, b) => b.totalMinutes - a.totalMinutes);
+    } catch (error) {
+        console.error('Failed to fetch employee working hours:', error);
+        return [];
+    }
+};
+
+
 
 
 /**
