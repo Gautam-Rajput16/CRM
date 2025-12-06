@@ -479,13 +479,14 @@ export const AttendanceReportDashboard: React.FC = () => {
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Browser</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {filteredRecords.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-16 text-center">
+                                        <td colSpan={7} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center justify-center text-gray-400">
                                                 <Search className="h-12 w-12 mb-3 opacity-20" />
                                                 <p className="text-lg font-medium text-gray-500">No attendance records found</p>
@@ -540,6 +541,11 @@ export const AttendanceReportDashboard: React.FC = () => {
                                             <td className="px-6 py-4 text-sm text-gray-500">
                                                 <span className="truncate max-w-xs block" title={record.browserInfo}>
                                                     {record.browserInfo || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-sm text-gray-600 font-mono">
+                                                    {record.ipAddress || '-'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">

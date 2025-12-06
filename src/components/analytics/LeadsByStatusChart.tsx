@@ -37,7 +37,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
           '#F59E0B', // Yellow for Follow-up
           '#FB923C', // Orange for Special Follow-up
           '#10B981', // Green for Confirmed
-          '#EF4444', // Red for Not Connected
+          '#1cb0b8', // Cyan for Not Connected
           '#3B82F6', // Blue for Interested
           '#F97316', // Orange for Not - Interested
           '#8B5CF6', // Purple for Meeting
@@ -47,7 +47,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
           '#F59E0B',
           '#FB923C',
           '#10B981',
-          '#EF4444',
+          '#1cb0b8',
           '#3B82F6',
           '#F97316',
           '#8B5CF6',
@@ -58,7 +58,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
           '#FBBF24',
           '#FDBA74',
           '#34D399',
-          '#F87171',
+          '#67dad9',
           '#60A5FA',
           '#FB923C',
           '#A78BFA',
@@ -104,7 +104,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
         <h3 className="text-lg font-semibold text-gray-900">Leads by Status</h3>
         <div className="text-sm text-gray-600">Total: {total}</div>
       </div>
-      
+
       <div className="relative h-64">
         {total > 0 ? (
           <Doughnut data={data} options={options} />
@@ -117,7 +117,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Status breakdown */}
       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
         <div>
@@ -145,7 +145,7 @@ export const LeadsByStatusChart: React.FC<LeadsByStatusChartProps> = ({
           <div className="text-xs text-gray-600">Confirmed</div>
         </div>
         <div>
-          <div className="text-lg font-semibold text-red-600">
+          <div className="text-lg font-semibold text-cyan-600">
             {statusCounts['Not Connected']}
           </div>
           <div className="text-xs text-gray-600">Not Connected</div>

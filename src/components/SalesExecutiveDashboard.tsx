@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
+import {
+  LayoutDashboard,
+  Users,
   BarChart3,
   TrendingUp,
   LogOut,
@@ -69,7 +69,7 @@ const MeetingSummaryModal: React.FC<MeetingSummaryModalProps> = ({ isOpen, onClo
     <>
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -171,7 +171,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
   const [showMeetingDetailsPopup, setShowMeetingDetailsPopup] = useState(false);
   const [showMeetingDetailsForm, setShowMeetingDetailsForm] = useState(false);
   const [meetingDetailsLead, setMeetingDetailsLead] = useState<Lead | null>(null);
-  
+
   const {
     leads,
     isLoading,
@@ -183,7 +183,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
     addMeetingSummary,
     updateMeetingStatus
   } = useLeads();
-  
+
   // Add updateMeetingDetails function
   const handleUpdateMeetingDetails = async (leadId: string, meetingDescription: string, meetingDate: string, meetingTime: string, meetingLocation: string) => {
     try {
@@ -200,10 +200,10 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
 
   const { user } = useAuth();
   const { profiles } = useProfiles(true);
-  
+
   // Get current user profile
   const currentUserProfile = profiles.find(profile => profile.id === user?.id);
-  
+
   // Filter leads - show leads assigned to this sales executive OR meetings assigned to them
   const myLeads = leads.filter(lead => {
     const isAssigned = lead.assignedUserId === user?.id;
@@ -211,15 +211,15 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
     return isAssigned || isMeetingAssigned;
   });
 
-  
+
   // Apply search and status filters
   const filteredLeads = myLeads.filter(lead => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       lead.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.phone.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'All' || lead.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -328,21 +328,20 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        <a 
+                        <a
                           href={`tel:${lead.phone}`}
                           className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
                           title="Click to call"
                         >
                           {lead.phone}
                         </a>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          lead.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-                          lead.status === 'Follow-up' ? 'bg-yellow-100 text-yellow-800' :
-                          lead.status === 'Special Follow-up' ? 'bg-orange-100 text-orange-800' :
-                          lead.status === 'Not Connected' ? 'bg-red-100 text-red-800' :
-                          lead.status === 'Meeting' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${lead.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
+                            lead.status === 'Follow-up' ? 'bg-yellow-100 text-yellow-800' :
+                              lead.status === 'Special Follow-up' ? 'bg-orange-100 text-orange-800' :
+                                lead.status === 'Not Connected' ? 'bg-cyan-100 text-cyan-800' :
+                                  lead.status === 'Meeting' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
+                          }`}>
                           {getDisplayStatus(lead.status)}
                         </span>
                       </div>
@@ -361,7 +360,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
                           View Meeting
                         </button>
                       )}
-                      
+
                       <button
                         onClick={() => handleAddMeetingSummary(lead)}
                         className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
@@ -369,7 +368,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
                         <MessageSquare className="h-4 w-4" />
                         Add Summary
                       </button>
-                      
+
                       {lead.meetingStatus !== 'conducted' && (
                         <button
                           onClick={() => handleUpdateMeetingStatus(lead.id, 'conducted')}
@@ -379,7 +378,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
                           Conducted
                         </button>
                       )}
-                      
+
                       {lead.meetingStatus !== 'not_conducted' && (
                         <button
                           onClick={() => handleUpdateMeetingStatus(lead.id, 'not_conducted')}
@@ -551,7 +550,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
       />
-      
+
       {isLoading ? (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -567,7 +566,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
           onAddFollowUpUpdate={addFollowUpUpdate}
           onAddMeetingSummary={handleAddMeetingSummaryFromTable}
           selectedLeads={[]}
-          onSelectLead={() => {}}
+          onSelectLead={() => { }}
           hideAssignedTo={true}
         />
       )}
@@ -578,33 +577,33 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
     <div className="space-y-4 lg:space-y-6">
       <div className="bg-white rounded-lg shadow p-4 lg:p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 lg:mb-6">My Performance Overview</h3>
-        
+
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4">
           <div className="text-center p-3 lg:p-4 bg-gray-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</div>
             <div className="text-xs lg:text-sm text-gray-500">Total Leads</div>
           </div>
-          
+
           <div className="text-center p-3 lg:p-4 bg-green-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-green-600">{stats.confirmed}</div>
             <div className="text-xs lg:text-sm text-gray-500">Confirmed</div>
           </div>
-          
+
           <div className="text-center p-3 lg:p-4 bg-blue-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-blue-600">{stats.interested}</div>
             <div className="text-xs lg:text-sm text-gray-500">Interested</div>
           </div>
-          
+
           <div className="text-center p-3 lg:p-4 bg-red-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-red-600">{stats.notInterested}</div>
             <div className="text-xs lg:text-sm text-gray-500">Not Interested</div>
           </div>
-          
+
           <div className="text-center p-3 lg:p-4 bg-emerald-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-emerald-600">{stats.meetingConducted}</div>
             <div className="text-xs lg:text-sm text-gray-500">Conducted</div>
           </div>
-          
+
           <div className="text-center p-3 lg:p-4 bg-rose-50 rounded-lg">
             <div className="text-xl lg:text-2xl font-bold text-rose-600">{stats.meetingNotConducted}</div>
             <div className="text-xs lg:text-sm text-gray-500">Not Conducted</div>
@@ -685,11 +684,10 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                activeSection === item.id
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeSection === item.id
                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+                }`}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -726,11 +724,10 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                activeSection === item.id
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === item.id
                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+                }`}
             >
               {item.icon}
               <span className="font-medium">{item.label}</span>
@@ -761,7 +758,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
               </h2>
               <p className="text-gray-600">Manage your assigned leads efficiently</p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                 Sales Executive
@@ -787,7 +784,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
         lead={selectedLead}
         onSave={handleSaveMeetingSummary}
       />
-      
+
       {/* Meeting Details Popup */}
       {meetingDetailsLead && (
         <MeetingDetailsPopup
@@ -803,7 +800,7 @@ const SalesExecutiveDashboard: React.FC<SalesExecutiveDashboardProps> = ({ onLog
           }}
         />
       )}
-      
+
       {/* Meeting Details Form */}
       {meetingDetailsLead && (
         <MeetingDetailsForm

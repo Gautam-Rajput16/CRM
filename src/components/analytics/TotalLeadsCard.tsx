@@ -26,21 +26,20 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
         <h3 className="text-lg font-semibold text-gray-900">Total Leads Overview</h3>
         <Users className="h-6 w-6 text-blue-600" />
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         {/* Total Leads */}
         <div className="text-center">
           <div className="text-3xl font-bold text-gray-900 mb-1">{totalLeads}</div>
           <div className="text-sm text-gray-600">Total Leads</div>
         </div>
-        
+
         {/* Dash Status */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['-'] > 0 
-              ? 'cursor-pointer hover:bg-gray-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['-'] > 0
+              ? 'cursor-pointer hover:bg-gray-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['-'] > 0 && onStatusClick('-')}
         >
           <div className="flex items-center justify-center mb-2">
@@ -62,14 +61,13 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Follow-up */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Follow-up'] > 0 
-              ? 'cursor-pointer hover:bg-yellow-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Follow-up'] > 0
+              ? 'cursor-pointer hover:bg-yellow-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Follow-up'] > 0 && onStatusClick('Follow-up')}
         >
           <div className="flex items-center justify-center mb-2">
@@ -91,14 +89,13 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Confirmed */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Confirmed'] > 0 
-              ? 'cursor-pointer hover:bg-green-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Confirmed'] > 0
+              ? 'cursor-pointer hover:bg-green-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Confirmed'] > 0 && onStatusClick('Confirmed')}
         >
           <div className="flex items-center justify-center mb-2">
@@ -120,23 +117,22 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Not Connected */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Not Connected'] > 0 
-              ? 'cursor-pointer hover:bg-red-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Not Connected'] > 0
+              ? 'cursor-pointer hover:bg-cyan-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Not Connected'] > 0 && onStatusClick('Not Connected')}
         >
           <div className="flex items-center justify-center mb-2">
-            <UserX className="h-5 w-5 text-red-500 mr-1" />
+            <UserX className="h-5 w-5 text-cyan-500 mr-1" />
             {onStatusClick && statusCounts['Not Connected'] > 0 && (
-              <ChevronRight className="h-4 w-4 text-red-400 ml-1" />
+              <ChevronRight className="h-4 w-4 text-cyan-400 ml-1" />
             )}
           </div>
-          <div className="text-2xl font-bold text-red-600 mb-1">
+          <div className="text-2xl font-bold text-cyan-600 mb-1">
             {statusCounts['Not Connected']}
           </div>
           <div className="text-sm text-gray-600">Not Connected</div>
@@ -144,19 +140,18 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             {totalLeads > 0 ? Math.round((statusCounts['Not Connected'] / totalLeads) * 100) : 0}%
           </div>
           {onStatusClick && statusCounts['Not Connected'] > 0 && (
-            <div className="text-xs text-red-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="text-xs text-cyan-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
               Click to view details
             </div>
           )}
         </div>
-        
+
         {/* Interested */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Interested'] > 0 
-              ? 'cursor-pointer hover:bg-blue-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Interested'] > 0
+              ? 'cursor-pointer hover:bg-blue-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Interested'] > 0 && onStatusClick('Interested')}
         >
           <div className="flex items-center justify-center mb-2">
@@ -178,14 +173,13 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Not - Interested */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Not - Interested'] > 0 
-              ? 'cursor-pointer hover:bg-orange-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Not - Interested'] > 0
+              ? 'cursor-pointer hover:bg-orange-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Not - Interested'] > 0 && onStatusClick('Not - Interested')}
         >
           <div className="flex items-center justify-center mb-2">
@@ -207,14 +201,13 @@ export const TotalLeadsCard: React.FC<TotalLeadsCardProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Meeting */}
-        <div 
-          className={`text-center p-3 rounded-lg transition-all duration-200 group ${
-            onStatusClick && statusCounts['Meeting'] > 0 
-              ? 'cursor-pointer hover:bg-purple-50 hover:shadow-md transform hover:scale-105' 
+        <div
+          className={`text-center p-3 rounded-lg transition-all duration-200 group ${onStatusClick && statusCounts['Meeting'] > 0
+              ? 'cursor-pointer hover:bg-purple-50 hover:shadow-md transform hover:scale-105'
               : ''
-          }`}
+            }`}
           onClick={() => onStatusClick && statusCounts['Meeting'] > 0 && onStatusClick('Meeting')}
         >
           <div className="flex items-center justify-center mb-2">

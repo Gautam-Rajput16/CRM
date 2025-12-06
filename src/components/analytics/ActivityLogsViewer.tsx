@@ -218,7 +218,7 @@ export const ActivityLogsViewer: React.FC<ActivityLogsViewerProps> = ({
       case 'Special Follow-up':
         return 'bg-orange-100 text-orange-800';
       case 'Not Connected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-cyan-100 text-cyan-800';
       case 'Interested':
         return 'bg-blue-100 text-blue-800';
       case 'Not - Interested':

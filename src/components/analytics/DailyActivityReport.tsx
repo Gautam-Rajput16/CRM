@@ -58,8 +58,8 @@ interface EmployeeActivity {
   mostRecentTimestamp: string;
 }
 
-export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({ 
-  selectedDate = new Date().toISOString().split('T')[0] 
+export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
+  selectedDate = new Date().toISOString().split('T')[0]
 }) => {
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [statusLogs, setStatusLogs] = useState<StatusChangeLog[]>([]);
@@ -84,21 +84,21 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
         getCallLogs(),
         getStatusChangeLogs()
       ]);
-      
+
       // Filter by selected date
       const filteredCalls = calls.filter((call: any) => {
         const callDate = new Date(call.call_timestamp).toISOString().split('T')[0];
         return callDate === selectedDate;
       });
-      
+
       const filteredStatusChanges = statusChanges.filter((status: any) => {
         const statusDate = new Date(status.change_timestamp).toISOString().split('T')[0];
         return statusDate === selectedDate;
       });
-      
+
       setCallLogs(calls as CallLog[]);
       setStatusLogs(statusChanges as StatusChangeLog[]);
-      
+
       // Group activities by employee
       const allActivities = [
         ...filteredCalls.map((log: any) => ({
@@ -129,7 +129,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
             totalStatusChanges: 0
           };
         }
-        
+
         acc[employeeKey].activities.push({
           type: activity.type,
           timestamp: activity.timestamp,
@@ -141,7 +141,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
           notes: activity.notes,
           id: activity.activity_id
         });
-        
+
         if (activity.type === 'call') {
           acc[employeeKey].totalCalls++;
           if (!acc[employeeKey].lastCallDate || new Date(activity.timestamp) > new Date(acc[employeeKey].lastCallDate)) {
@@ -153,7 +153,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
             acc[employeeKey].lastStatusDate = activity.timestamp;
           }
         }
-        
+
         return acc;
       }, {});
 
@@ -199,7 +199,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
       case 'Special Follow-up':
         return 'bg-orange-100 text-orange-800';
       case 'Not Connected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-cyan-100 text-cyan-800';
       case 'Interested':
         return 'bg-blue-100 text-blue-800';
       case 'Not - Interested':
@@ -289,7 +289,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
               return (
                 <div key={employee.employee_id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
                   {/* Employee Header - Always Visible */}
-                  <div 
+                  <div
                     className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={toggleExpanded}
                   >
@@ -304,7 +304,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
                             <p className="text-gray-600 font-medium capitalize">{employee.employee_role?.replace('_', ' ')}</p>
                           </div>
                         </div>
-                        
+
                         {/* Activity Summary */}
                         <div className="flex items-center gap-4 ml-6">
                           <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
@@ -332,7 +332,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
                             </p>
                           )}
                         </div>
-                        
+
                         {/* Expand/Collapse Icon */}
                         <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
                           <ArrowRight className="h-5 w-5 text-gray-400" />
@@ -348,9 +348,8 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
                         <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity History</h4>
                         <div className="space-y-4">
                           {employee.activities.map((activity) => (
-                            <div key={activity.id} className={`bg-white border rounded-lg p-4 ${
-                              activity.type === 'call' ? 'border-blue-200' : 'border-green-200'
-                            }`}>
+                            <div key={activity.id} className={`bg-white border rounded-lg p-4 ${activity.type === 'call' ? 'border-blue-200' : 'border-green-200'
+                              }`}>
                               {activity.type === 'call' ? (
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-3">
@@ -362,11 +361,10 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
                                       {activity.lead_phone && (
                                         <p className="text-sm text-gray-600">{activity.lead_phone}</p>
                                       )}
-                                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                                        activity.call_type === 'outbound' 
-                                          ? 'bg-blue-100 text-blue-800' 
+                                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${activity.call_type === 'outbound'
+                                          ? 'bg-blue-100 text-blue-800'
                                           : 'bg-green-100 text-green-800'
-                                      }`}>
+                                        }`}>
                                         {activity.call_type} call
                                       </span>
                                     </div>
@@ -402,7 +400,7 @@ export const DailyActivityReport: React.FC<DailyActivityReportProps> = ({
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Notes */}
                               {activity.notes && (
                                 <div className="mt-3 p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">

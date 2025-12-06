@@ -28,11 +28,11 @@ export const LeadStatusModal: React.FC<LeadStatusModalProps> = ({
   // Filter leads by status and employee
   const filteredLeads = useMemo(() => {
     let filtered = leads.filter(lead => lead.status === status);
-    
+
     if (selectedEmployee) {
       filtered = filtered.filter(lead => lead.assignedUserId === selectedEmployee);
     }
-    
+
     return filtered;
   }, [leads, status, selectedEmployee]);
 
@@ -46,7 +46,7 @@ export const LeadStatusModal: React.FC<LeadStatusModalProps> = ({
       case 'Confirmed':
         return 'text-green-600 bg-green-100';
       case 'Not Connected':
-        return 'text-red-600 bg-red-100';
+        return 'text-cyan-600 bg-cyan-100';
       case 'Interested':
         return 'text-blue-600 bg-blue-100';
       case 'Not - Interested':
@@ -90,7 +90,7 @@ export const LeadStatusModal: React.FC<LeadStatusModalProps> = ({
                 Leads with Status: {status === '-' ? 'Pending' : status}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {selectedEmployee ? 
+                {selectedEmployee ?
                   `Showing ${filteredLeads.length} of ${leads.filter(l => l.status === status).length} leads` :
                   `Total: ${filteredLeads.length} leads`
                 }
@@ -140,7 +140,7 @@ export const LeadStatusModal: React.FC<LeadStatusModalProps> = ({
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No leads found</h3>
               <p className="text-gray-600">
-                {selectedEmployee 
+                {selectedEmployee
                   ? `No leads with status "${status}" assigned to the selected employee.`
                   : `No leads found with status "${status}".`
                 }
@@ -162,7 +162,7 @@ export const LeadStatusModal: React.FC<LeadStatusModalProps> = ({
                       </div>
                       <div className="flex items-center">
                         <Phone className="h-4 w-4 text-gray-500 mr-2" />
-                        <a 
+                        <a
                           href={`tel:${lead.phone}`}
                           className="text-blue-600 hover:text-blue-800 transition-colors"
                         >

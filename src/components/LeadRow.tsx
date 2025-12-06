@@ -64,7 +64,7 @@ export const LeadRow: React.FC<LeadRowProps> = ({
 
   const handleStatusChange = async (newStatus: Lead['status']) => {
     const oldStatus = lead.status;
-    
+
     // Call the original status update function
     if (onUpdateStatus) {
       onUpdateStatus(lead.id, newStatus);
@@ -99,7 +99,7 @@ export const LeadRow: React.FC<LeadRowProps> = ({
       case 'Special Follow-up':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'Not Connected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-cyan-100 text-cyan-800 border-cyan-200';
       case 'Interested':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'Not - Interested':
@@ -116,19 +116,19 @@ export const LeadRow: React.FC<LeadRowProps> = ({
     try {
       const date = new Date(`${dateString}T${timeString || '00:00'}`);
       if (isNaN(date.getTime())) return '-';
-      
+
       const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       });
-      
+
       const formattedTime = timeString ? date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true
       }) : '';
-      
+
       return formattedTime ? `${formattedDate}, ${formattedTime}` : formattedDate;
     } catch {
       return '-';
@@ -143,23 +143,22 @@ export const LeadRow: React.FC<LeadRowProps> = ({
       const day = String(now.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     const today = getCurrentDate();
     let normalizedDate = dateString;
-    
+
     if (normalizedDate && normalizedDate.includes('T')) {
       normalizedDate = normalizedDate.split('T')[0];
     }
-    
+
     return normalizedDate === today;
   };
 
   return (
     <>
-      <tr className={`hover:bg-gray-50 transition-colors ${
-        lead.status === 'Special Follow-up' ? 'bg-orange-50 border-l-4 border-orange-400' : 
-        isToday(lead.followUpDate) && lead.status === 'Follow-up' ? 'bg-yellow-50' : ''
-      }`}>
+      <tr className={`hover:bg-gray-50 transition-colors ${lead.status === 'Special Follow-up' ? 'bg-orange-50 border-l-4 border-orange-400' :
+          isToday(lead.followUpDate) && lead.status === 'Follow-up' ? 'bg-yellow-50' : ''
+        }`}>
         {onSelectLead && (
           <td className="px-6 py-4 whitespace-nowrap">
             <input
@@ -190,25 +189,25 @@ export const LeadRow: React.FC<LeadRowProps> = ({
             <div className="ml-4">
               <div className="text-sm font-medium text-gray-900">{lead.fullName}</div>
               <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-              {lead.followUpUpdates && lead.followUpUpdates.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
-                  {lead.followUpUpdates.length} update{lead.followUpUpdates.length > 1 ? 's' : ''}
-                </div>
-              )}
-              {lead.meetingSummaries && lead.meetingSummaries.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {lead.meetingSummaries.length} meeting{lead.meetingSummaries.length > 1 ? 's' : ''}
-                </div>
-              )}
-            </div>
+                {lead.followUpUpdates && lead.followUpUpdates.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    {lead.followUpUpdates.length} update{lead.followUpUpdates.length > 1 ? 's' : ''}
+                  </div>
+                )}
+                {lead.meetingSummaries && lead.meetingSummaries.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {lead.meetingSummaries.length} meeting{lead.meetingSummaries.length > 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center gap-2">
-            <a 
+            <a
               href={`tel:${lead.phone}`}
               onClick={handlePhoneClick}
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline hover:bg-blue-100 border rounded cursor-pointer transition-colors flex items-center gap-1 px-2 py-1"
@@ -420,7 +419,7 @@ export const LeadRow: React.FC<LeadRowProps> = ({
               ) : (
                 <div className="text-sm text-gray-500">Follow-up updates not available</div>
               )}
-              
+
               {/* Meeting Summaries */}
               {onAddMeetingSummary && currentUser && (
                 <MeetingSummaries
@@ -433,7 +432,7 @@ export const LeadRow: React.FC<LeadRowProps> = ({
           </td>
         </tr>
       )}
-      
+
       {/* Meeting Details Popup */}
       <MeetingDetailsPopup
         lead={lead}
@@ -441,7 +440,7 @@ export const LeadRow: React.FC<LeadRowProps> = ({
         onClose={() => setShowMeetingPopup(false)}
         onEdit={onUpdateMeetingDetails ? () => setShowMeetingForm(true) : undefined}
       />
-      
+
       {/* Meeting Details Form */}
       {onUpdateMeetingDetails && (
         <MeetingDetailsForm

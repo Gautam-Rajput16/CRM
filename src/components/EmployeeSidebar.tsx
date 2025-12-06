@@ -4,12 +4,12 @@ import { useLeads } from '../hooks/useLeads';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import * as XLSX from 'xlsx';
-import { 
-  User, 
-  Users, 
-  Mail, 
-  Upload, 
-  UserPlus, 
+import {
+  User,
+  Users,
+  Mail,
+  Upload,
+  UserPlus,
   FileSpreadsheet,
   X,
   Shield,
@@ -26,13 +26,13 @@ interface EmployeeSidebarProps {
 export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClose, refreshTrigger }) => {
   const [profilesRefreshFlag, setProfilesRefreshFlag] = useState(false);
   const [leadsRefreshFlag, setLeadsRefreshFlag] = useState(false);
-  
+
   const { profiles: allProfiles, isLoading } = useProfiles(true, profilesRefreshFlag); // Fetch all users
   const { leads } = useLeads(leadsRefreshFlag);
-  
+
   // Filter to show only users with 'user' role
   const profiles = allProfiles.filter(profile => profile.role === 'user');
-  
+
   // Refresh data when the sidebar opens or when refreshTrigger changes
   useEffect(() => {
     if (isOpen || refreshTrigger !== undefined) {
@@ -76,7 +76,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
   // Import leads for specific employee
   const handleImportForEmployee = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedEmployee) return;
-    
+
     try {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -95,7 +95,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
 
           for (const row of jsonData) {
             const currentDate = new Date().toISOString().split('T')[0];
-            
+
             // Create lead with assignment to selected employee
             const { error } = await supabase
               .from('leads')
@@ -117,7 +117,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
 
           setIsAssigning(false);
           toast.success(`${successCount} leads imported and assigned to ${selectedEmployee.name || selectedEmployee.email}`);
-          
+
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
@@ -149,14 +149,14 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
     setIsAssigning(true);
     const { error } = await supabase
       .from('leads')
-      .update({ 
+      .update({
         assigned_user_id: selectedEmployee.id,
         status: '-'
       })
       .in('id', unassignedLeads.map(lead => lead.id));
 
     setIsAssigning(false);
-    
+
     if (!error) {
       toast.success(`${unassignedLeads.length} unassigned leads assigned to ${selectedEmployee.name || selectedEmployee.email}`);
     } else {
@@ -170,7 +170,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
     <>
       {/* Overlay */}
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
-      
+
       {/* Sidebar */}
       <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto">
         <div className="p-6">
@@ -230,7 +230,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
                             <div className="flex gap-1">
                               <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full" title="Follow-up"></span>
                               <span className="inline-block w-2 h-2 bg-green-400 rounded-full" title="Confirmed"></span>
-                              <span className="inline-block w-2 h-2 bg-red-400 rounded-full" title="Not Connected"></span>
+                              <span className="inline-block w-2 h-2 bg-cyan-400 rounded-full" title="Not Connected"></span>
                             </div>
                           </div>
                         </div>
@@ -296,7 +296,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
                           <div className="text-xs text-gray-500">Confirmed</div>
                         </div>
                         <div className="bg-white rounded p-2 text-center">
-                          <div className="text-lg font-bold text-red-600">{stats.notConnected}</div>
+                          <div className="text-lg font-bold text-cyan-600">{stats.notConnected}</div>
                           <div className="text-xs text-gray-500">Not Connected</div>
                         </div>
                         <div className="bg-white rounded p-2 text-center">
@@ -320,7 +320,7 @@ export const EmployeeSidebar: React.FC<EmployeeSidebarProps> = ({ isOpen, onClos
               {/* Actions */}
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900">Lead Assignment Actions</h4>
-                
+
                 {/* Import Leads for Employee */}
                 <div className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">

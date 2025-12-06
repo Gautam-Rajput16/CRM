@@ -104,7 +104,7 @@ export const EmployeeActivityModal: React.FC<EmployeeActivityModalProps> = ({
       case 'Special Follow-up':
         return 'bg-orange-100 text-orange-800';
       case 'Not Connected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-cyan-100 text-cyan-800';
       case 'Interested':
         return 'bg-blue-100 text-blue-800';
       case 'Not - Interested':
@@ -219,11 +219,10 @@ export const EmployeeActivityModal: React.FC<EmployeeActivityModalProps> = ({
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            activity.call_type === 'outbound' 
-                              ? 'bg-blue-100 text-blue-800' 
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${activity.call_type === 'outbound'
+                              ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
-                          }`}>
+                            }`}>
                             {activity.call_type} call
                           </span>
                           <p className="text-sm text-gray-500 mt-1">{formatTime(activity.timestamp)}</p>
@@ -238,25 +237,25 @@ export const EmployeeActivityModal: React.FC<EmployeeActivityModalProps> = ({
                             <span className="text-sm font-medium text-blue-800">Last Called</span>
                           </div>
                           <p className="text-sm text-blue-700">
-                            {activity.previous_call_date 
+                            {activity.previous_call_date
                               ? new Date(activity.previous_call_date).toLocaleString('en-US', {
-                                  month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
-                                })
+                                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                              })
                               : 'No previous calls'
                             }
                           </p>
                         </div>
-                        
+
                         <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
                           <div className="flex items-center gap-2 mb-1">
                             <Activity className="h-4 w-4 text-green-600" />
                             <span className="text-sm font-medium text-green-800">Last Status Update</span>
                           </div>
                           <p className="text-sm text-green-700">
-                            {activity.previous_status_date 
+                            {activity.previous_status_date
                               ? new Date(activity.previous_status_date).toLocaleString('en-US', {
-                                  month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
-                                })
+                                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                              })
                               : 'No previous updates'
                             }
                           </p>
@@ -311,25 +310,25 @@ export const EmployeeActivityModal: React.FC<EmployeeActivityModalProps> = ({
                             <span className="text-sm font-medium text-blue-800">Last Called</span>
                           </div>
                           <p className="text-sm text-blue-700">
-                            {activity.previous_call_date 
+                            {activity.previous_call_date
                               ? new Date(activity.previous_call_date).toLocaleString('en-US', {
-                                  month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
-                                })
+                                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                              })
                               : 'No previous calls'
                             }
                           </p>
                         </div>
-                        
+
                         <div className="bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
                           <div className="flex items-center gap-2 mb-1">
                             <Activity className="h-4 w-4 text-green-600" />
                             <span className="text-sm font-medium text-green-800">Previous Status Update</span>
                           </div>
                           <p className="text-sm text-green-700">
-                            {activity.previous_status_date 
+                            {activity.previous_status_date
                               ? new Date(activity.previous_status_date).toLocaleString('en-US', {
-                                  month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
-                                })
+                                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                              })
                               : 'No previous updates'
                             }
                           </p>
